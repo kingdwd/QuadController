@@ -32,4 +32,6 @@ GPIO__INPUT(pwmch3, 0, 17);
 GPIO__INPUT(pwmch4, 0, 18);
 GPIO__INPUT(pwmch5, 0, 22);
 
+//GPIO__OUTPUT(radioSel, 2, 0);
+
 #endif /* PINDEFS_HPP_ */

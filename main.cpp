@@ -937,43 +937,42 @@ protected:
 
 };
 
-class SendTask: public TickerTask {
-public:
-	SendTask(QuadWireless *q) :
-			parent(q) {
-	}
+//class SendTask: public TickerTask {
+//public:
+//	SendTask(QuadWireless *q) :
+//			parent(q) {
+//	}
 
-	QuadWireless *parent;
-	void handleTick() {
-		static PeriodicTimer<> t(100);
+	//QuadWireless *parent;
+//	void handleTick() {
+//		static PeriodicTimer<> t(100);
+//
+//		if (parent->zeroing && qController.zeroingComplete()) {
+//			for (auto node : parent->connectedNodes) {
+//				parent->sendCalibrationData(node->address);
+//
+//				parent->zeroing = false;
+//			}
+//		}
+//
+//		if (t.isExpired()) {
+//			{
+//				//PROFILE();
+//				for (auto node : parent->connectedNodes) {
+//					qController.fillPacket(qController.packet);
+//					parent->send(node->address,
+//							(uint8_t*) &qController.packet,
+//							sizeof(qController.packet),
+//							QuadWireless::DATA_PKT, FrameType::DATA, 0);
+//
+//				}
+//			}
+//		}
+//	}
+//};
 
-		if (parent->zeroing && qController.zeroingComplete()) {
-			for (auto node : parent->connectedNodes) {
-				parent->sendCalibrationData(node->address);
 
-				parent->zeroing = false;
-			}
-		}
-
-		if (t.isExpired()) {
-			{
-				//PROFILE();
-				for (auto node : parent->connectedNodes) {
-					qController.fillPacket(qController.packet);
-					parent->send(node->address,
-							(uint8_t*) &qController.packet,
-							sizeof(qController.packet),
-							QuadWireless::DATA_PKT, FrameType::DATA, 0);
-
-				}
-			}
-		}
-	}
-};
-
-
-QuadWireless radio;
-SendTask sender(&radio);
+//QuadWireless radio;
 
 GPIO__OUTPUT(test, 0, 16);
 
@@ -995,24 +994,6 @@ void idle() {
 	}
 }
 
-void __attribute((noinline, used)) testas() {
-
-	Quaternion<Fp32f<29>> q;
-	q.w = (int16_t)LPC_UART0->ACR;
-	q.x =(int16_t)LPC_UART0->ACR;
-	q.y = (int16_t)LPC_UART0->ACR;
-	q.z = 0.5;
-	q.normalize();
-
-	Quaternion<Fp32f<29>> q2 = q;
-
-	q = q * q2.conjugated();
-
-	q.w = 1 - 2*(q.w*q.w);
-
-	XPCC_LOG_DEBUG << "Test" << std::sqrt(q.w) << endl;
-
-}
 
 int main() {
 	test::setOutput(false);
@@ -1030,13 +1011,12 @@ int main() {
 	Pinsel::setFunc(0, 9, 2); //MOSI0
 
 	SpiMaster1::initialize(SpiMaster1::Mode::MODE_0, 8000000);
+	Pinsel::setFunc(0, 10, 2);
+	Pinsel::setFunc(0, 11, 2);
+
 
 	xpcc::Random::seed();
 
-	testas();
-
-	Pinsel::setFunc(0, 10, 2);
-	Pinsel::setFunc(0, 11, 2);
 
 	lpc17::I2cMaster2::initialize<xpcc::I2cMaster::DataRate::Fast>();
 
@@ -1044,13 +1024,13 @@ int main() {
 	eeprom.initialize();
 
 	//initialize radio
-	radio.init();
-	radioDriver.setCLKM(rf230::no_clock);
+	//radio.init();
+	//radioDriver.setCLKM(rf230::no_clock);
 
-	radio.setAddress(0x9809);
-	radio.setPanId(0x0001);
+	//radio.setAddress(0x9809);
+	//radio.setPanId(0x0001);
 
-	radioDriver.rxOn();
+	//radioDriver.rxOn();
 
 	usbConnPin::setOutput(true);
 	device.connect();
