@@ -32,6 +32,8 @@ GPIO__INPUT(pwmch3, 0, 17);
 GPIO__INPUT(pwmch4, 0, 18);
 GPIO__INPUT(pwmch5, 0, 22);
 
-//GPIO__OUTPUT(radioSel, 2, 0);
+//si4432 radio
+GPIO__IO(radio_sel, 0, 16);
+GPIO__IO(radio_irq, 0, 22);
 
 #endif /* PINDEFS_HPP_ */

@@ -400,25 +400,15 @@ public:
 
 			///
 
-			//XPCC_LOG_DEBUG << vMag << endl;
 
-
-			float angle = 45 * M_PI/180.0;
-			Vector3f axis(0.0,0.0,1.0);
-
-			axis.rotate(qRotation);
-			XPCC_LOG_DEBUG << axis <<endl;
-
-			Quaternion<float> qt(axis, angle);
-
-			XPCC_LOG_DEBUG << qt <<endl;
+			//XPCC_LOG_DEBUG << qt <<endl;
 //qRotation = qRotation * qt.conjugated();
-			qt = qRotation * qt.conjugated();
+			//qt = qRotation * qt.conjugated();
 
-			XPCC_LOG_DEBUG << '$';
-			XPCC_LOG_DEBUG .write((uint8_t*)&qRotation, sizeof(float)*4);
-			XPCC_LOG_DEBUG .write((uint8_t*)&qRotation, sizeof(float)*4);
-			XPCC_LOG_DEBUG .write((uint8_t*)&vMag, sizeof(float)*3);
+			//XPCC_LOG_DEBUG << '$';
+			//XPCC_LOG_DEBUG .write((uint8_t*)&qRotation, sizeof(float)*4);
+			//XPCC_LOG_DEBUG .write((uint8_t*)&qRotation, sizeof(float)*4);
+			//XPCC_LOG_DEBUG .write((uint8_t*)&vMag, sizeof(float)*3);
 
 
 			//XPCC_LOG_DEBUG << "hdg " << ahrsHeading*180.0/M_PI << " mag " << compassHeading*180.0/M_PI + 5.5<< endl;

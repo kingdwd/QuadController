@@ -36,7 +36,7 @@ void delay(uint32_t millis) {
 }
 
 void yield() {
-
+	xpcc::TickerTask::yield();
 }
 
 uint32_t millis() {
@@ -53,17 +53,41 @@ void pinMode(uint8_t pin, WiringPinMode mode) {
 		case WiringPinMode::INPUT:
 			radio_sel::setInput();
 		}
+	}
+}
 
+void (*irqFn)() = 0;
+
+void attachInterrupt(uint8_t pin, void (*fn)(void), int mode) {
+	printf("attach int %d -> %d\n", pin, mode);
+
+	if(pin == 1) {
+		xpcc::GpioInterrupt::enableInterrupt(radio_irq::Port,
+				radio_irq::Pin, xpcc::IntSense::EDGE,
+				xpcc::IntEdge::SINGLE, xpcc::IntEvent::FALLING_EDGE);
+
+		irqFn = fn;
+
+		xpcc::GpioInterrupt::enableGlobalInterrupts();
 	}
 
 }
 
-void attachInterrupt(uint8_t pin, void (*fn)(void), int mode) {
-	printf("attach int %d -> %d\n", pin, mode);
-}
+class Irq : xpcc::TickerTask {
+	void handleInterrupt(int irq) {
+		if(xpcc::GpioInterrupt::checkInterrupt(irq,
+				radio_irq::Port, radio_irq::Pin, xpcc::IntEvent::FALLING_EDGE)) {
+
+			if(irqFn)
+				irqFn();
+
+		}
+	}
+};
+
+static Irq _irq;
 
 void digitalWrite(uint8_t pin, uint8_t val) {
-	//printf("dig write %d -> %d\n", pin, val);
 	if(pin == 0) {
 		radio_sel::setOutput(val);
 	}
@@ -77,7 +101,7 @@ public:
 
 	uint8_t transfer(uint8_t data) {
 		//printf("spi write %02x\n", data);
-		return xpcc::lpc17::SpiMaster1::write(data);
+		return xpcc::lpc17::SpiMaster0::write(data);
 	}
 };
 
