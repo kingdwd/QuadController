@@ -70,12 +70,24 @@ public:
 
 	}
 
+	void handleInit() {
+		init();
+		setFrequency(422.0, 0.05);
+		setModemConfig(RH_RF22::FSK_Rb125Fd125);
+		setModeRx();
+	}
+
 	void handleTick() {
 		if(!transmitting()) {
 
 			if(available()) {
 
 				printf("rx packet\n");
+				uint8_t buf[255];
+				uint8_t len;
+				recv(buf, &len);
+
+				XPCC_LOG_DEBUG .dump_buffer(buf, len);
 
 			}
 		}
@@ -239,6 +251,16 @@ protected:
 		else if(cmp(argv[0], "radio_test")) {
 
 			radio.sendTest();
+
+		}
+
+		else if(cmp(argv[0], "radio_init")) {
+
+			if(radio.init()) {
+				printf("OK\n");
+			} else {
+				printf("FAIL\n");
+			}
 
 		}
 
@@ -556,22 +578,11 @@ int main() {
 	//initialize eeprom
 	eeprom.initialize();
 
-	//initialize radio
-	//radio.init();
-	//radioDriver.setCLKM(rf230::no_clock);
-
-	//radio.setAddress(0x9809);
-	//radio.setPanId(0x0001);
-
-	//radioDriver.rxOn();
-
 	usbConnPin::setOutput(true);
 	device.connect();
 
 	NVIC_SetPriority(USB_IRQn, 10);
 	NVIC_SetPriority(EINT3_IRQn, 0);
-
-	radio.init();
 
 	TickerTask::tasksRun(idle);
 }
