@@ -28,7 +28,7 @@
 #include "eedata.hpp"
 #include "QuadController.hpp"
 
-#include <RH_RF22.h>
+#include "radio.hpp"
 
 using namespace xpcc;
 using namespace xpcc::lpc17;
@@ -64,64 +64,7 @@ xpcc::log::Logger xpcc::log::error(null);
 #endif
 
 
-class Radio : TickerTask, public RH_RF22 {
-public:
-	Radio() : RH_RF22(0, 1) {
 
-	}
-
-	void handleInit() {
-		init();
-		setFrequency(422.0, 0.05);
-		setModemConfig(RH_RF22::FSK_Rb125Fd125);
-		setModeRx();
-	}
-
-	void handleTick() {
-		if(!transmitting()) {
-
-			if(available()) {
-
-				printf("rx packet\n");
-				uint8_t buf[255];
-				uint8_t len;
-				recv(buf, &len);
-
-				XPCC_LOG_DEBUG .dump_buffer(buf, len);
-
-			}
-		}
-	}
-
-    inline uint16_t getRxBad() {
-    	return _rxBad;
-    }
-
-    inline uint16_t getRxGood() {
-    	return _rxGood;
-    }
-
-    inline uint16_t getTxGood() {
-    	return _txGood;
-    }
-
-    void sendTest() {
-    	uint8_t data[] = "Hello World!Hello World!Hello World!Hello World!Hello World!Hello World!Hello World!Hello World!";
-
-    	send(data, sizeof(data));
-    	waitPacketSent();
-
-    }
-
-    bool transmitting() {
-    	return mode() == RHModeTx;
-    }
-
-    bool idle() {
-    	return mode() == RHModeIdle;
-    }
-
-};
 
 
 Radio radio;
