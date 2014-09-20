@@ -64,7 +64,12 @@ xpcc::log::Logger xpcc::log::error(null);
 #endif
 
 
+class RemoteControl : public Radio {
 
+
+
+
+};
 
 
 Radio radio;
