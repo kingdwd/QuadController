@@ -21,7 +21,7 @@
 #ifndef _INV_MPU_H_
 #define _INV_MPU_H_
 
-#include "../I2CDev.hpp"
+#include <I2CDev.hpp>
 
 //  Define this symbol to get debug messages
 

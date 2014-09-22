@@ -8,8 +8,8 @@
 #ifndef L3GD20_HPP_
 #define L3GD20_HPP_
 
-#include "I2CDev.hpp"
-#include "eedata.hpp"
+#include <I2CDev.hpp>
+#include <eeprom/eeprom.hpp>
 #include <xpcc/processing.hpp>
 #include <xpcc/architecture/peripheral/i2c_adapter.hpp>
 #include <xpcc/math/geometry.hpp>
@@ -159,16 +159,14 @@ public:
 	}
 
 	void handleInit() override {
-		if(eeprom.isValidToken()) {
-			uint8_t data[6];
-			eeprom.eeRead(EEData::magnetometerCalibration, data);
+		uint8_t data[6];
+		eeprom.get(&EEData::magnetometerCalibration, data);
 
-			I2Cdev::writeBytes(devAddr, FXOS8700_M_OFF_X_MSB, 6, data);
-
-			I2Cdev::writeBit(devAddr, FXOS8700_M_CTRL_REG1, 6, 1); //reset
-
-		} else {
+		if(data[0] = 0xFF && data[3] == 0xFF) {
 			startCalibration();
+		} else {
+			I2Cdev::writeBytes(devAddr, FXOS8700_M_OFF_X_MSB, 6, data);
+			I2Cdev::writeBit(devAddr, FXOS8700_M_CTRL_REG1, 6, 1); //reset
 		}
 	}
 
@@ -187,7 +185,7 @@ public:
 
 		uint8_t data[6];
 		I2Cdev::readBytes(devAddr, FXOS8700_M_OFF_X_MSB, 6, data);
-		eeprom.eeWrite(EEData::magnetometerCalibration, data);
+		eeprom.put(&EEData::magnetometerCalibration, data);
 	}
 
 	void registerWrite(uint8_t reg, uint8_t value) {

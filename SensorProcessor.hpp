@@ -12,15 +12,14 @@
 #include <xpcc/math/filter.hpp>
 #include <math.h>
 
-#include "FXOS8700.hpp"
+#include "sensors/FXOS8700.hpp"
 
-#include "MotionDriver/inv_mpu_dmp_motion_driver.h"
-#include "MotionDriver/inv_mpu.h"
+#include "sensors/MotionDriver/inv_mpu_dmp_motion_driver.h"
+#include "sensors/MotionDriver/inv_mpu.h"
 
-#include "madgwickAHRS.hpp"
 #include "Ultrasonic.hpp"
-#include "eedata.hpp"
-#include "ms5611.hpp"
+#include "eeprom/eedata.hpp"
+#include "sensors/ms5611.hpp"
 
 using namespace xpcc;
 
@@ -146,13 +145,8 @@ public:
 	void handleInit() override {
 		xpcc::delay_ms(50);
 
-		if(eeprom.isValidToken()) {
-			eeprom.eeRead(EEData::qTrim, qTrim);
-			eeprom.eeRead(EEData::qRotationOffset, qRotationOffset);
-		} else {
-			eeprom.eeWrite(EEData::qTrim, qTrim);
-			eeprom.eeWrite(EEData::qRotationOffset, qRotationOffset);
-		}
+		eeprom.get(&EEData::qTrim, qTrim);
+		eeprom.get(&EEData::qRotationOffset, qRotationOffset);
 
 		//mpu.initialize();
 		//mpu.setFullScaleGyroRange(MPU6050_GYRO_FS_1000);
@@ -251,14 +245,14 @@ public:
 		qRotationOffset.normalize();
 		qTrim = q;
 
-		eeprom.eeWrite(EEData::qTrim, q);
+		eeprom.put(&EEData::qTrim, q);
 	}
 
 	void setRotationOffset(Quaternion<float> &q) {
 		qRotationOffset = q;
 		qTrim = Quaternion<float>(1.0, 0,0,0);
 
-		eeprom.eeWrite(EEData::qRotationOffset, q);
+		eeprom.put(&EEData::qRotationOffset, q);
 	}
 
 	void zero() {
@@ -527,7 +521,7 @@ public:
 									+ z * g, cross.x, cross.y, cross.z);
 					qRotationOffset.normalize();
 
-					eeprom.eeWrite(EEData::qRotationOffset, qRotationOffset);
+					eeprom.put(&EEData::qRotationOffset, qRotationOffset);
 
 					XPCC_LOG_DEBUG << "Q - " << qRotationOffset << "\n";
 

@@ -146,35 +146,21 @@ public:
 
 	void handleInit() override {
 
-		if(eeprom.isValidToken()) {
 
-			float pid[3];
-			float hpid[4];
+		float pid[3];
+		float hpid[4];
 
-			XPCC_LOG_DEBUG .printf("loading PID params\n");
-			eeprom.eeRead(EEData::PIDParams, pid);
-			setPID(pid[0], pid[1], pid[2], false);
+		XPCC_LOG_DEBUG .printf("loading PID params\n");
+		eeprom.get(&EEData::PIDParams, pid);
+		setPID(pid[0], pid[1], pid[2], false);
 
-			eeprom.eeRead(EEData::ratePIDParams, pid);
-			setRatePID(pid[0], pid[1], pid[2], false);
+		eeprom.get(&EEData::ratePIDParams, pid);
+		setRatePID(pid[0], pid[1], pid[2], false);
 
-			eeprom.eeRead(EEData::heightPIDparams, hpid);
-			setHeightPID(hpid[0], hpid[1], hpid[2], hpid[3], false);
+		eeprom.get(&EEData::heightPIDparams, hpid);
+		setHeightPID(hpid[0], hpid[1], hpid[2], hpid[3], false);
 
-			eeprom.eeRead(EEData::yawGain, yawGain);
-
-		} else {
-
-			const float rpid[3] = {0.1070, 0.0015, 0};
-			const float pid[3]  = {1.4700, 0.0700, 0};
-			const float hpid[4] = {0, 0, 0.25, 0.2};
-
-			setPID(pid[0], pid[1], pid[2]);
-			setRatePID(rpid[0], rpid[1], rpid[2]);
-			setHeightPID(hpid[0], hpid[1], hpid[2], hpid[3]);
-
-			eeprom.eeWrite(EEData::yawGain, yawGain);
-		}
+		eeprom.get(&EEData::yawGain, yawGain);
 
 		this->SensorProcessor::handleInit();
 	}
@@ -246,7 +232,7 @@ public:
 
 		if(store) {
 			float pid[3] = {Kp,Ki,Kd};
-			eeprom.eeWrite(EEData::PIDParams, pid);
+			eeprom.put(&EEData::PIDParams, pid);
 		}
 	}
 
@@ -257,7 +243,7 @@ public:
 
 		if(store) {
 			float pid[4] = {Kp, Ki, Kd, maxOutput};
-			eeprom.eeWrite(EEData::heightPIDparams, pid);
+			eeprom.put(&EEData::heightPIDparams, pid);
 		}
 
 	}
@@ -271,7 +257,7 @@ public:
 
 		if(store) {
 			float pid[3] = {Kp,Ki,Kd};
-			eeprom.eeWrite(EEData::ratePIDParams, pid);
+			eeprom.put(&EEData::ratePIDParams, pid);
 		}
 	}
 
