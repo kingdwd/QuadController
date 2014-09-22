@@ -22,9 +22,9 @@ public:
 		timestamp = 0;
 		time = 0;
 
-		xpcc::GpioInterrupt::enableInterrupt(Echo::Port, Echo::Pin, IntSense::EDGE, IntEdge::DOUBLE);
+		//xpcc::GpioInterrupt::enableInterrupt(Echo::Port, Echo::Pin, IntSense::EDGE, IntEdge::DOUBLE);
 
-		xpcc::GpioInterrupt::enableGlobalInterrupts();
+		//xpcc::GpioInterrupt::enableGlobalInterrupts();
 	}
 
 	void ping() {
@@ -45,16 +45,16 @@ public:
 		}
 	}
 
-	void handleInterrupt(int irqN) override {
+	//void handleInterrupt(int irqN) override {
 
-		if(GpioInterrupt::checkInterrupt(irqN, Echo::Port, Echo::Pin, IntEvent::FALLING_EDGE)) {
-			time = Clock::now() - timestamp;
-		}
-		if(GpioInterrupt::checkInterrupt(irqN, Echo::Port, Echo::Pin, IntEvent::RISING_EDGE)) {
-			timestamp = Clock::now();
-		}
+//		if(GpioInterrupt::checkInterrupt(irqN, Echo::Port, Echo::Pin, IntEvent::FALLING_EDGE)) {
+//			time = Clock::now() - timestamp;
+//		}
+//		if(GpioInterrupt::checkInterrupt(irqN, Echo::Port, Echo::Pin, IntEvent::RISING_EDGE)) {
+//			timestamp = Clock::now();
+//		}
 
-	}
+	//}
 
 private:
 	Timestamp timestamp;

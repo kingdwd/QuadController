@@ -23,7 +23,6 @@
 #include <math.h>
 
 #include "SensorProcessor.hpp"
-#include "ControllerInputs.hpp"
 
 #include "eedata.hpp"
 #include "QuadController.hpp"
@@ -267,10 +266,6 @@ protected:
 CmdTerminal cmd(device);
 //CmdTerminal ucmd(uart);
 
-
-extern "C" void I2C2_IRQHandler() {
-	lpc17::I2cMaster2::IRQ();
-}
 
 //rf230::Driver<SpiMaster1, radioRst, radioSel, radioSlpTr, radioIrq> radioDriver;
 

@@ -9,7 +9,6 @@
 #define CONTROLLERINPUTS_HPP_
 
 #include "pindefs.hpp"
-#include "pwmChannel.hpp"
 #include "eedata.hpp"
 #include <xpcc/processing.hpp>
 
