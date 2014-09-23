@@ -22,6 +22,7 @@ public:
 		timestamp = 0;
 		time = 0;
 
+
 	}
 
 	void ping() {
@@ -41,7 +42,6 @@ public:
 			tMeasure.stop();
 		}
 	}
-
 
 private:
 	Timestamp timestamp;

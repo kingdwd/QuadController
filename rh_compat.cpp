@@ -75,6 +75,7 @@ void attachInterrupt(uint8_t pin, void (*fn)(void), int mode) {
 	}
 }
 
+
 void digitalWrite(uint8_t pin, uint8_t val) {
 	if(pin == 0) {
 		radio_sel::setOutput(val);

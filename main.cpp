@@ -95,6 +95,7 @@ public:
 		seq = 0;
 		dataSent = 0;
 		lastAckSeq = 0;
+		numRetries = 0;
 	}
 
 	void handleInit() {

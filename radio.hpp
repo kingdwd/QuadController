@@ -10,7 +10,6 @@
 
 #include <xpcc/architecture.hpp>
 #include <RH_RF22.h>
-#include <system.hpp>
 
 using namespace xpcc;
 
@@ -93,6 +92,7 @@ private:
         return status;
 
     }
+
 };
 
 
