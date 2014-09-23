@@ -146,7 +146,6 @@ public:
 
 	void handleInit() override {
 
-
 		float pid[3];
 		float hpid[4];
 

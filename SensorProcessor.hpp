@@ -151,7 +151,6 @@ public:
 		//mpu.initialize();
 		//mpu.setFullScaleGyroRange(MPU6050_GYRO_FS_1000);
 		//mpu.setFullScaleAccelRange(MPU6050_ACCEL_FS_4);
-
 		//mpu.setI2CBypassEnabled(true);
 		mpu_init_structures();
 

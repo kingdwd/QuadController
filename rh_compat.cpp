@@ -70,7 +70,7 @@ void attachInterrupt(uint8_t pin, void (*fn)(void), int mode) {
 	printf("attach int %d -> %d\n", pin, mode);
 
 	if(pin == 1) {
-		xpcc::GpioInt::attach(radioIrq::Port, radioIrq::Pin,
+		xpcc::GpioInt::attach(radio_irq::Port, radio_irq::Pin,
 				fn, xpcc::IntEdge::FALLING_EDGE);
 	}
 }
@@ -89,7 +89,7 @@ public:
 
 	uint8_t transfer(uint8_t data) {
 		//printf("spi write %02x\n", data);
-		return xpcc::lpc17::SpiMaster0::write(data);
+		return radioSpiMaster::write(data);
 	}
 };
 

@@ -33,7 +33,7 @@
 using namespace xpcc;
 using namespace xpcc::lpc17;
 
-const char fwversion[16] __attribute__((used, section(".fwversion"))) = "QuadV0.3";
+const char fwversion[16] __attribute__((used, section(".fwversion"))) = "QuadV0.4";
 
 
 #define _DEBUG
@@ -41,7 +41,7 @@ const char fwversion[16] __attribute__((used, section(".fwversion"))) = "QuadV0.
 
 //UARTDevice uart(460800);
 
-USBSerial device(0xffff);
+USBSerial device(0xffff, 0xf3c4);
 xpcc::IOStream stream(device);
 xpcc::NullIODevice null;
 
@@ -63,17 +63,56 @@ xpcc::log::Logger xpcc::log::error(null);
 #endif
 #endif
 
+enum PacketType {
+	PACKET_RC = 100,
+	PACKET_RF_PARAM_SET,
+	PACKET_DATA_FIRST, //first data fragment
+	PACKET_DATA, //data fragment
+	PACKET_DATA_LAST, //last data fragment
+	PACKET_ACK
+};
+
+struct Packet {
+	uint8_t id = PACKET_RC;
+	uint8_t seq; //sequence number
+	uint8_t ackSeq; //rx acknowledged seq number
+} __attribute__((packed));
+
+struct RCPacket : Packet {
+	int16_t yawCh;
+	int16_t pitchCh;
+	int16_t rollCh;
+	int16_t throttleCh;
+	uint16_t auxCh;
+	uint8_t switches;
+} __attribute__((packed));
 
 class Radio : TickerTask, public RH_RF22 {
 public:
 	Radio() : RH_RF22(0, 1) {
-
+		dataPos = 0;
+		dataLen = 0;
+		seq = 0;
+		dataSent = 0;
+		lastAckSeq = 0;
 	}
 
 	void handleInit() {
 		init();
-		setFrequency(422.0, 0.05);
-		setModemConfig(RH_RF22::FSK_Rb125Fd125);
+
+		float freq, afc;
+		uint8_t txPow;
+		RH_RF22::ModemConfigChoice modemCfg;
+
+		eeprom.get(&EEData::rfFrequency, freq);
+		eeprom.get(&EEData::afcPullIn, afc);
+		eeprom.get(&EEData::txPower, txPow);
+		eeprom.get(&EEData::modemCfg, modemCfg);
+
+		setFrequency(freq, afc);
+		setTxPower(txPow);
+		setModemConfig(modemCfg);
+
 		setModeRx();
 	}
 
@@ -81,17 +120,103 @@ public:
 		if(!transmitting()) {
 
 			if(available()) {
-
-				printf("rx packet\n");
-				uint8_t buf[255];
-				uint8_t len;
+				//printf("rx packet\n");
+				uint8_t buf[_bufLen];
+				uint8_t len = sizeof(buf);
 				recv(buf, &len);
 
-				XPCC_LOG_DEBUG .dump_buffer(buf, len);
+				if(len >= sizeof(Packet)) {
+					Packet* inPkt = (Packet*)buf;
+
+					switch(inPkt->id) {
+					case PACKET_RC:
+
+						break;
+					}
+
+					//received packet, send data back
+					//if no data is available, send only ack
+					if(inPkt->id >= PACKET_RC) {
+						lastAckSeq = inPkt->ackSeq;
+
+						if(dataLen) {
+							if(lastAckSeq == seq) {
+								//send next fragment
+								dataPos += dataSent;
+							} else {
+								numRetries++;
+							}
+
+							Packet *hdr = (Packet*)(packetBuf+dataPos-sizeof(Packet));
+
+							dataSent = dataLen - (dataPos - sizeof(Packet));
+							uint8_t m = maxFragment - sizeof(Packet);
+							if(dataSent > m) {
+								dataSent = m;
+								if(dataPos == sizeof(Packet)) {
+									hdr->id = PACKET_DATA_FIRST;
+								} else {
+									hdr->id = PACKET_DATA;
+								}
+
+							} else {
+								hdr->id = PACKET_DATA_LAST;
+								dataLen = 0; //packet is sent,
+											 //clear dataLen
+							}
+							hdr->seq = ++seq;
+							hdr->ackSeq = inPkt->seq;
+
+							printf("send frag %d %d\n", dataSent, dataPos-sizeof(Packet));
+
+							RH_RF22::send(packetBuf+dataPos-sizeof(Packet),
+									dataSent+sizeof(Packet));
+
+						} else { //send only ack
+							Packet p;
+							p.id = PACKET_ACK;
+							p.seq = ++seq;
+							p.ackSeq = inPkt->seq;
+
+							RH_RF22::send((uint8_t*)&p, sizeof(Packet));
+						}
+					}
+				}
+
+				//XPCC_LOG_DEBUG .dump_buffer(buf, len);
 
 			}
 		}
 	}
+
+	bool sendData(const uint8_t* data, uint8_t len) {
+		if(!dataLen) {
+			dataLen = len;
+			if(dataLen > sizeof(packetBuf)-sizeof(Packet))
+				dataLen = sizeof(packetBuf)-sizeof(Packet);
+			dataSent = 0;
+			dataPos = sizeof(Packet);
+
+			memcpy(packetBuf+dataPos, data, dataLen);
+			return true;
+		}
+
+		return false;
+	}
+
+	uint8_t maxFragment = 64;
+
+	uint8_t packetBuf[255];
+
+	uint8_t dataLen; //packet size
+	uint8_t dataSent; //data sent
+	uint8_t dataPos;
+
+	uint8_t lastAckSeq; //last acknowledged sequence number
+
+	uint32_t numRetries;
+
+	uint8_t seq;
 
     inline uint16_t getRxBad() {
     	return _rxBad;
@@ -105,14 +230,6 @@ public:
     	return _txGood;
     }
 
-    void sendTest() {
-    	uint8_t data[] = "Hello World!Hello World!Hello World!Hello World!Hello World!Hello World!Hello World!Hello World!";
-
-    	send(data, sizeof(data));
-    	waitPacketSent();
-
-    }
-
     bool transmitting() {
     	return mode() == RHModeTx;
     }
@@ -122,7 +239,6 @@ public:
     }
 
 };
-
 
 Radio radio;
 
@@ -248,21 +364,7 @@ protected:
 			}
 		}
 
-		else if(cmp(argv[0], "radio_test")) {
 
-			radio.sendTest();
-
-		}
-
-		else if(cmp(argv[0], "radio_init")) {
-
-			if(radio.init()) {
-				printf("OK\n");
-			} else {
-				printf("FAIL\n");
-			}
-
-		}
 
 //		else if(cmp(argv[0], "baro")) {
 //			if(!qController.baro.initialize(0x77)) {
@@ -304,6 +406,13 @@ protected:
 
 			qController.mag.startCalibration();
 		}
+
+		else if(cmp(argv[0], "sendPacket")) {
+
+			radio.sendData((uint8_t*)4, 200);
+
+		}
+
 		else if(cmp(argv[0], "dump")) {
 			extern uint32_t crashData[3];
 			if(crashData[0]) {
@@ -522,19 +631,16 @@ void idle() {
 	__WFI();
 	test::set();
 	static PeriodicTimer<> t(500);
-	static bool eeReady;
 
 	if(t.isExpired()) {
-		if(!eeReady) {
-			eeprom.setToken();
-			eeReady = true;
-		}
-
 		LPC_WDT->WDFEED = 0xAA;
 		LPC_WDT->WDFEED = 0x55;
 	}
 }
 
+void panic(const char* msg) {
+
+}
 
 int main() {
 	test::setOutput(false);
@@ -561,8 +667,6 @@ int main() {
 	Pinsel::setFunc(0, 18, 2); //MOSI0
 ////
 
-
-
 	xpcc::Random::seed();
 
 /////
@@ -571,11 +675,11 @@ int main() {
 	Pinsel::setFunc(0, 11, 2); //I2C2
 /////
 
-	//initialize eeprom
-	eeprom.initialize();
-
 	usbConnPin::setOutput(true);
 	device.connect();
+
+	//initialize eeprom
+	eeprom.initialize();
 
 	NVIC_SetPriority(USB_IRQn, 10);
 	NVIC_SetPriority(EINT3_IRQn, 0);

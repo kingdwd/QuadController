@@ -156,9 +156,7 @@ public:
 		//enable auto calibration, OSR = 7
 		//one shot degauss
 		registerWrite(FXOS8700_M_CTRL_REG1, 0b01000001 | (7<<2));
-	}
 
-	void handleInit() override {
 		uint8_t data[6];
 		eeprom.get(&EEData::magnetometerCalibration, data);
 
@@ -169,6 +167,7 @@ public:
 			I2Cdev::writeBit(devAddr, FXOS8700_M_CTRL_REG1, 6, 1); //reset
 		}
 	}
+
 
 	void startCalibration() {
 

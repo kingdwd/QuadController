@@ -16,9 +16,9 @@ template<typename T, typename U> constexpr size_t offsetOf(U T::*member)
     return (char*)&((T*)nullptr->*member) - (char*)nullptr;
 }
 
-class Eeprom : public xpcc::I2cEeprom<xpcc::lpc17::I2cMaster1> {
+class Eeprom : public xpcc::I2cEeprom<xpcc::lpc17::I2cMaster2> {
 public:
-	Eeprom() : xpcc::I2cEeprom<xpcc::lpc17::I2cMaster1>(0x50), token(0) {}
+	Eeprom() : xpcc::I2cEeprom<xpcc::lpc17::I2cMaster2>(0x50), token(0) {}
 	virtual ~Eeprom(){};
 
 	void initialize()  {
