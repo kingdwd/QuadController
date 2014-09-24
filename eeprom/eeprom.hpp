@@ -45,6 +45,10 @@ public:
 		return token == TOKEN;
 	}
 
+	void clearToken() {
+		writeByte(0, 0);
+	}
+
 	void setToken() {
 		writeByte(0, TOKEN);
 		token = TOKEN;

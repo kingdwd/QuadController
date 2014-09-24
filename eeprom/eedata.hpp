@@ -11,7 +11,7 @@
 #include <xpcc/math.hpp>
 #include <RH_RF22.h>
 
-#define TOKEN 0x63
+#define TOKEN 0x64
 
 struct EEData {
 	uint8_t token;
@@ -19,6 +19,7 @@ struct EEData {
 	float rfFrequency; //radio frequency
 	float afcPullIn;
 	uint8_t txPower;
+	uint8_t fhChannels;
 	RH_RF22::ModemConfigChoice modemCfg;
 
 	float qTrim[4];
@@ -41,9 +42,10 @@ const EEData eeDefaults = {
 		429.0f,
 		0.05f,
 		RH_RF22_TXPOW_1DBM,
+		10,
 		RH_RF22::GFSK_Rb57_6Fd28_8,
-
-
+		{1.0f, 0, 0, 0},
+		{1.0f, 0, 0, 0}
 };
 
 #endif /* EEDATA_HPP_ */

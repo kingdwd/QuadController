@@ -78,6 +78,17 @@ struct Packet {
 	uint8_t ackSeq; //rx acknowledged seq number
 } __attribute__((packed));
 
+struct RadioCfgPacket : Packet {
+	RadioCfgPacket() {
+		id = PACKET_RF_PARAM_SET;
+	}
+	float frequency;
+	float afcPullIn;
+	uint8_t modemCfg;
+	uint8_t fhChannels;
+	uint8_t txPower;
+} __attribute__((packed));
+
 struct RCPacket : Packet {
 	int16_t yawCh;
 	int16_t pitchCh;
@@ -99,17 +110,21 @@ public:
 	}
 
 	void handleInit() {
-		init();
-
-		float freq, afc;
-		uint8_t txPow;
-		RH_RF22::ModemConfigChoice modemCfg;
+		if(!init()) {
+			printf("radio init failed\n");
+		}
 
 		eeprom.get(&EEData::rfFrequency, freq);
 		eeprom.get(&EEData::afcPullIn, afc);
 		eeprom.get(&EEData::txPower, txPow);
 		eeprom.get(&EEData::modemCfg, modemCfg);
+		eeprom.get(&EEData::fhChannels, fhChannels);
 
+		if(afc > 0.159375f || afc < 0.0f) {
+			afc = 0.05;
+		}
+
+		setFHStepSize(10);
 		setFrequency(freq, afc);
 		setTxPower(txPow);
 		setModemConfig(modemCfg);
@@ -117,11 +132,14 @@ public:
 		setModeRx();
 	}
 
+	float freq;
+	float afc;
+	uint8_t txPow;
+	RH_RF22::ModemConfigChoice modemCfg;
+
 	void handleTick() {
 		if(!transmitting()) {
-
 			if(available()) {
-				//printf("rx packet\n");
 				uint8_t buf[_bufLen];
 				uint8_t len = sizeof(buf);
 				recv(buf, &len);
@@ -133,12 +151,53 @@ public:
 					case PACKET_RC:
 
 						break;
+					case PACKET_RF_PARAM_SET:{
+						RadioCfgPacket* cfg = (RadioCfgPacket*)inPkt;
+
+						printf("--Radio parameters received--\n");
+						printf("Freq %f\n", cfg->frequency);
+						printf("AfcPullIn %f\n", cfg->afcPullIn);
+						printf("Modem setting %d\n", cfg->modemCfg);
+						printf("FH Channels %d\n", cfg->fhChannels);
+						printf("TX Power %d\n", cfg->txPower);
+
+						//TODO: CHECK Values
+
+						fhChannels = cfg->fhChannels;
+
+						if(freq != cfg->frequency || afc != cfg->afcPullIn) {
+							freq = cfg->frequency;
+							afc = cfg->afcPullIn;
+							setFrequency(cfg->frequency, cfg->afcPullIn);
+
+							eeprom.put(&EEData::rfFrequency, freq);
+							eeprom.put(&EEData::afcPullIn, afc);
+						}
+
+						if(modemCfg != cfg->modemCfg) {
+							modemCfg = (RH_RF22::ModemConfigChoice)cfg->modemCfg;
+							setModemConfig(modemCfg);
+							eeprom.put(&EEData::modemCfg, cfg->modemCfg);
+						}
+						if(txPow != cfg->txPower) {
+							txPow = cfg->txPower;
+							setTxPower(txPow);
+							eeprom.put(&EEData::txPower, cfg->txPower);
+						}
+
+						eeprom.put(&EEData::fhChannels, cfg->fhChannels);
+
+					}
+						break;
 					}
 
 					//received packet, send data back
 					//if no data is available, send only ack
 					if(inPkt->id >= PACKET_RC) {
-						lastAckSeq = inPkt->ackSeq;
+						lastAckSeq = inPkt->ackSeq; //set last acknowledged ours packet
+
+						if(fhChannels)
+							setFHChannel((inPkt->seq^0x55) % fhChannels);
 
 						if(dataLen) {
 							if(lastAckSeq == seq) {
@@ -205,6 +264,7 @@ public:
 		return false;
 	}
 
+	uint8_t fhChannels;
 	uint8_t maxFragment = 64;
 
 	uint8_t packetBuf[255];
@@ -288,10 +348,31 @@ protected:
 			qController.setHeightPID(kp, ki, kd, max, true);
 
 		}
+		else if(cmp(argv[0], "erase")) {
+			printf("Erasing eeprom\n");
+			uint8_t t = 0;
+			eeprom.put(&EEData::token, t);
+			eeprom.readByte(0, t);
+			printf("%d\n", t);
+		}
 		else if(cmp(argv[0], "test")) {
 
 			//XPCC_LOG_DEBUG .printf("%d\n", qController.mpu.getAccelerationZ());
 		}
+		else if(cmp(argv[0], "radio")) {
+			printf("Freq: %.4f\n", radio.freq);
+			printf("afc: %.4f\n", radio.afc);
+			printf("modemCfg: %d\n", radio.modemCfg);
+			printf("FH channels: %d\n", radio.fhChannels);
+
+			//XPCC_LOG_DEBUG .printf("%d\n", qController.mpu.getAccelerationZ());
+		}
+		else if(cmp(argv[0], "freq")) {
+			float f = toFloat(argv[1]);
+			radio.setFrequency(f, 0.05);
+			//XPCC_LOG_DEBUG .printf("%d\n", qController.mpu.getAccelerationZ());
+		}
+
 		else if(cmp(argv[0], "i2r")) {
 			uint8_t addr = to_int(argv[1]);
 			uint8_t reg = to_int(argv[2]);
