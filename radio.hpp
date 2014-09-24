@@ -13,17 +13,77 @@
 
 using namespace xpcc;
 
+enum PacketType {
+	PACKET_RC = 100,
+	PACKET_RF_PARAM_SET,
+	PACKET_DATA_FIRST, //first data fragment
+	PACKET_DATA, //data fragment
+	PACKET_DATA_LAST, //last data fragment
+	PACKET_ACK
+};
+
+struct Packet {
+	uint8_t id = PACKET_RC;
+	uint8_t seq; //sequence number
+	uint8_t ackSeq; //rx acknowledged seq number
+} __attribute__((packed));
+
+struct RadioCfgPacket : Packet {
+	RadioCfgPacket() {
+		id = PACKET_RF_PARAM_SET;
+	}
+	float frequency;
+	float afcPullIn;
+	uint8_t modemCfg;
+	uint8_t fhChannels;
+	uint8_t txPower;
+} __attribute__((packed));
+
+struct RCPacket : Packet {
+	int16_t yawCh;
+	int16_t pitchCh;
+	int16_t rollCh;
+	int16_t throttleCh;
+	uint16_t auxCh;
+	uint8_t switches;
+} __attribute__((packed));
+
 class Radio : TickerTask, public RH_RF22 {
 public:
 	Radio() : RH_RF22(0, 1) {
-
+		dataPos = 0;
+		dataLen = 0;
+		seq = 0;
+		dataSent = 0;
+		lastAckSeq = 0;
+		numRetries = 0;
 	}
 
-	void handleInit() {
-		if(!init()) {
-			panic("radio init fail");
-		}
-	}
+	void handleInit();
+	void handleTick();
+
+	bool sendData(const uint8_t* data, uint8_t len);
+
+protected:
+	float freq;
+	float afc;
+	uint8_t txPow;
+	RH_RF22::ModemConfigChoice modemCfg;
+
+	uint8_t fhChannels;
+	uint8_t maxFragment = 64;
+
+	uint8_t packetBuf[255];
+
+	uint8_t dataLen; //packet size
+	uint8_t dataSent; //data sent
+	uint8_t dataPos;
+
+	uint8_t lastAckSeq; //last acknowledged sequence number
+
+	uint32_t numRetries;
+
+	uint8_t seq;
 
     inline uint16_t getRxBad() {
     	return _rxBad;
@@ -47,51 +107,8 @@ public:
 
 private:
 
-
-    uint8_t spiBurstWrite0(uint8_t reg, const uint8_t* src, uint8_t len) {
-        uint8_t status = 0;
-
-        digitalWrite(_slaveSelectPin, LOW);
-        status = radioSpiMaster::write(reg | RH_SPI_WRITE_MASK);
-
-        while(len) {
-        	uint8_t written = radioSpiMaster::burstWrite(src, len);
-        	while(!radioSpiMaster::txFifoEmpty()) {
-        		//TickerTask::yield();
-        	}
-        	len -= written;
-        	src += written;
-        }
-        radioSpiMaster::flushRx();
-        digitalWrite(_slaveSelectPin, HIGH);
-        return status;
-    }
-
-    uint8_t spiBurstRead0(uint8_t reg, uint8_t* dest, uint8_t len) {
-        uint8_t status = 0;
-
-        digitalWrite(_slaveSelectPin, LOW);
-
-        status = radioSpiMaster::write(reg & ~RH_SPI_WRITE_MASK); // Send the start address with the write mask off
-
-        radioSpiMaster::flushRx();
-
-        while(len) {
-        	uint8_t n = radioSpiMaster::burstWrite(dest, len);
-        	//wait until transfer finishes
-        	while(radioSpiMaster::isBusy()) {
-        		//TickerTask::yield();
-        	}
-        	radioSpiMaster::burstRead(dest, len);
-
-        	len -= n;
-        	dest += n;
-        }
-        digitalWrite(_slaveSelectPin, HIGH);
-
-        return status;
-
-    }
+    uint8_t spiBurstWrite0(uint8_t reg, const uint8_t* src, uint8_t len);
+    uint8_t spiBurstRead0(uint8_t reg, uint8_t* dest, uint8_t len);
 
 };
 

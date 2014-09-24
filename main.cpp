@@ -29,6 +29,7 @@
 
 #include <RH_RF22.h>
 #include "mavlink.hpp"
+#include "radio.hpp"
 
 using namespace xpcc;
 using namespace xpcc::lpc17;
@@ -63,243 +64,7 @@ xpcc::log::Logger xpcc::log::error(null);
 #endif
 #endif
 
-enum PacketType {
-	PACKET_RC = 100,
-	PACKET_RF_PARAM_SET,
-	PACKET_DATA_FIRST, //first data fragment
-	PACKET_DATA, //data fragment
-	PACKET_DATA_LAST, //last data fragment
-	PACKET_ACK
-};
 
-struct Packet {
-	uint8_t id = PACKET_RC;
-	uint8_t seq; //sequence number
-	uint8_t ackSeq; //rx acknowledged seq number
-} __attribute__((packed));
-
-struct RadioCfgPacket : Packet {
-	RadioCfgPacket() {
-		id = PACKET_RF_PARAM_SET;
-	}
-	float frequency;
-	float afcPullIn;
-	uint8_t modemCfg;
-	uint8_t fhChannels;
-	uint8_t txPower;
-} __attribute__((packed));
-
-struct RCPacket : Packet {
-	int16_t yawCh;
-	int16_t pitchCh;
-	int16_t rollCh;
-	int16_t throttleCh;
-	uint16_t auxCh;
-	uint8_t switches;
-} __attribute__((packed));
-
-class Radio : TickerTask, public RH_RF22 {
-public:
-	Radio() : RH_RF22(0, 1) {
-		dataPos = 0;
-		dataLen = 0;
-		seq = 0;
-		dataSent = 0;
-		lastAckSeq = 0;
-		numRetries = 0;
-	}
-
-	void handleInit() {
-		if(!init()) {
-			printf("radio init failed\n");
-		}
-
-		eeprom.get(&EEData::rfFrequency, freq);
-		eeprom.get(&EEData::afcPullIn, afc);
-		eeprom.get(&EEData::txPower, txPow);
-		eeprom.get(&EEData::modemCfg, modemCfg);
-		eeprom.get(&EEData::fhChannels, fhChannels);
-
-		if(afc > 0.159375f || afc < 0.0f) {
-			afc = 0.05;
-		}
-
-		setFHStepSize(10);
-		setFrequency(freq, afc);
-		setTxPower(txPow);
-		setModemConfig(modemCfg);
-
-		setModeRx();
-	}
-
-	float freq;
-	float afc;
-	uint8_t txPow;
-	RH_RF22::ModemConfigChoice modemCfg;
-
-	void handleTick() {
-		if(!transmitting()) {
-			if(available()) {
-				uint8_t buf[_bufLen];
-				uint8_t len = sizeof(buf);
-				recv(buf, &len);
-
-				if(len >= sizeof(Packet)) {
-					Packet* inPkt = (Packet*)buf;
-
-					switch(inPkt->id) {
-					case PACKET_RC:
-
-						break;
-					case PACKET_RF_PARAM_SET:{
-						RadioCfgPacket* cfg = (RadioCfgPacket*)inPkt;
-
-						printf("--Radio parameters received--\n");
-						printf("Freq %f\n", cfg->frequency);
-						printf("AfcPullIn %f\n", cfg->afcPullIn);
-						printf("Modem setting %d\n", cfg->modemCfg);
-						printf("FH Channels %d\n", cfg->fhChannels);
-						printf("TX Power %d\n", cfg->txPower);
-
-						//TODO: CHECK Values
-
-						fhChannels = cfg->fhChannels;
-
-						if(freq != cfg->frequency || afc != cfg->afcPullIn) {
-							freq = cfg->frequency;
-							afc = cfg->afcPullIn;
-							setFrequency(cfg->frequency, cfg->afcPullIn);
-
-							eeprom.put(&EEData::rfFrequency, freq);
-							eeprom.put(&EEData::afcPullIn, afc);
-						}
-
-						if(modemCfg != cfg->modemCfg) {
-							modemCfg = (RH_RF22::ModemConfigChoice)cfg->modemCfg;
-							setModemConfig(modemCfg);
-							eeprom.put(&EEData::modemCfg, cfg->modemCfg);
-						}
-						if(txPow != cfg->txPower) {
-							txPow = cfg->txPower;
-							setTxPower(txPow);
-							eeprom.put(&EEData::txPower, cfg->txPower);
-						}
-
-						eeprom.put(&EEData::fhChannels, cfg->fhChannels);
-
-					}
-						break;
-					}
-
-					//received packet, send data back
-					//if no data is available, send only ack
-					if(inPkt->id >= PACKET_RC) {
-						lastAckSeq = inPkt->ackSeq; //set last acknowledged ours packet
-
-						if(fhChannels)
-							setFHChannel((inPkt->seq^0x55) % fhChannels);
-
-						if(dataLen) {
-							if(lastAckSeq == seq) {
-								//send next fragment
-								dataPos += dataSent;
-							} else {
-								numRetries++;
-							}
-
-							Packet *hdr = (Packet*)(packetBuf+dataPos-sizeof(Packet));
-
-							dataSent = dataLen - (dataPos - sizeof(Packet));
-							uint8_t m = maxFragment - sizeof(Packet);
-							if(dataSent > m) {
-								dataSent = m;
-								if(dataPos == sizeof(Packet)) {
-									hdr->id = PACKET_DATA_FIRST;
-								} else {
-									hdr->id = PACKET_DATA;
-								}
-
-							} else {
-								hdr->id = PACKET_DATA_LAST;
-								dataLen = 0; //packet is sent,
-											 //clear dataLen
-							}
-							hdr->seq = ++seq;
-							hdr->ackSeq = inPkt->seq;
-
-							printf("send frag %d %d\n", dataSent, dataPos-sizeof(Packet));
-
-							RH_RF22::send(packetBuf+dataPos-sizeof(Packet),
-									dataSent+sizeof(Packet));
-
-						} else { //send only ack
-							Packet p;
-							p.id = PACKET_ACK;
-							p.seq = ++seq;
-							p.ackSeq = inPkt->seq;
-
-							RH_RF22::send((uint8_t*)&p, sizeof(Packet));
-						}
-					}
-				}
-
-				//XPCC_LOG_DEBUG .dump_buffer(buf, len);
-
-			}
-		}
-	}
-
-	bool sendData(const uint8_t* data, uint8_t len) {
-		if(!dataLen) {
-			dataLen = len;
-			if(dataLen > sizeof(packetBuf)-sizeof(Packet))
-				dataLen = sizeof(packetBuf)-sizeof(Packet);
-			dataSent = 0;
-			dataPos = sizeof(Packet);
-
-			memcpy(packetBuf+dataPos, data, dataLen);
-			return true;
-		}
-
-		return false;
-	}
-
-	uint8_t fhChannels;
-	uint8_t maxFragment = 64;
-
-	uint8_t packetBuf[255];
-
-	uint8_t dataLen; //packet size
-	uint8_t dataSent; //data sent
-	uint8_t dataPos;
-
-	uint8_t lastAckSeq; //last acknowledged sequence number
-
-	uint32_t numRetries;
-
-	uint8_t seq;
-
-    inline uint16_t getRxBad() {
-    	return _rxBad;
-    }
-
-    inline uint16_t getRxGood() {
-    	return _rxGood;
-    }
-
-    inline uint16_t getTxGood() {
-    	return _txGood;
-    }
-
-    bool transmitting() {
-    	return mode() == RHModeTx;
-    }
-
-    bool idle() {
-    	return mode() == RHModeIdle;
-    }
-
-};
 
 Radio radio;
 
@@ -360,10 +125,10 @@ protected:
 			//XPCC_LOG_DEBUG .printf("%d\n", qController.mpu.getAccelerationZ());
 		}
 		else if(cmp(argv[0], "radio")) {
-			printf("Freq: %.4f\n", radio.freq);
-			printf("afc: %.4f\n", radio.afc);
-			printf("modemCfg: %d\n", radio.modemCfg);
-			printf("FH channels: %d\n", radio.fhChannels);
+			//printf("Freq: %.4f\n", radio.freq);
+			//printf("afc: %.4f\n", radio.afc);
+			//printf("modemCfg: %d\n", radio.modemCfg);
+			//printf("FH channels: %d\n", radio.fhChannels);
 
 			//XPCC_LOG_DEBUG .printf("%d\n", qController.mpu.getAccelerationZ());
 		}
