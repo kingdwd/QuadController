@@ -1508,6 +1508,17 @@ int mpu_set_gyro_bias_reg(long *gyro_bias) {
 	return 0;
 }
 
+int mpu_get_gyro_bias_reg(uint16_t data[3]) {
+
+	if (i2c_read(st.hw->addr, 0x13, 2, (uint8_t*)&data[0]))
+	return -1;
+	if (i2c_read(st.hw->addr, 0x15, 2, (uint8_t*)&data[2]))
+	return -1;
+	if (i2c_read(st.hw->addr, 0x17, 2, (uint8_t*)&data[4]))
+	return -1;
+	return 0;
+}
+
 int mpu_write_data(uint8_t reg, uint8_t* data, uint8_t len) {
 	if (i2c_write(st.hw->addr, reg, len, data))
 		return -1;

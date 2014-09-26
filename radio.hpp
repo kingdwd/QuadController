@@ -44,7 +44,7 @@ struct RCPacket : Packet {
 	int16_t pitchCh;
 	int16_t rollCh;
 	int16_t throttleCh;
-	uint16_t auxCh;
+	int16_t auxCh;
 	uint8_t switches;
 } __attribute__((packed));
 
@@ -55,16 +55,36 @@ public:
 		dataLen = 0;
 		seq = 0;
 		dataSent = 0;
-		lastAckSeq = 0;
+		//lastAckSeq = 0;
 		numRetries = 0;
 	}
 
 	void handleInit();
 	void handleTick();
 
-	bool sendData(const uint8_t* data, uint8_t len);
+	bool sendPacket(const uint8_t* data, uint8_t len);
+	bool isSendingPacket() {
+		return dataLen != 0;
+	}
+
+    inline uint16_t getRxBad() {
+    	return _rxBad;
+    }
+
+    inline uint16_t getRxGood() {
+    	return _rxGood;
+    }
+
+    inline uint16_t getTxGood() {
+    	return _txGood;
+    }
+
+    RCPacket rcData;
+    Timestamp rcPacketTimestamp;
 
 protected:
+	void handleTxComplete();
+
 	float freq;
 	float afc;
 	uint8_t txPow;
@@ -79,23 +99,11 @@ protected:
 	uint8_t dataSent; //data sent
 	uint8_t dataPos;
 
-	uint8_t lastAckSeq; //last acknowledged sequence number
+	//uint8_t lastAckSeq; //last acknowledged sequence number
+	//uint8_t lastSeq;
 
 	uint32_t numRetries;
-
 	uint8_t seq;
-
-    inline uint16_t getRxBad() {
-    	return _rxBad;
-    }
-
-    inline uint16_t getRxGood() {
-    	return _rxGood;
-    }
-
-    inline uint16_t getTxGood() {
-    	return _txGood;
-    }
 
     bool transmitting() {
     	return mode() == RHModeTx;
@@ -112,5 +120,6 @@ private:
 
 };
 
+extern Radio radio;
 
 #endif /* RADIO_HPP_ */

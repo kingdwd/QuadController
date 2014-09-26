@@ -10,8 +10,6 @@ MEMORY
 	FLASH (rx) : ORIGIN = 0x00001000, LENGTH = 62k
 
     RAM (rwx) : ORIGIN = 0x10000000, LENGTH = 16k-16
-    
-    EEPROM (r) : ORIGIN = 0, LENGTH = 256
 }
 
 
@@ -39,13 +37,7 @@ SECTIONS
 	/******************************************/
 	/* code section */
 
-        /* "normal" code */
-        
-    .eeprom :
-    {
-    	*(.eeprom)
-    }
-    
+        /* "normal" code */   
 	
 	.text :
 	{
@@ -205,17 +197,6 @@ SECTIONS
 		__data_end = .;
 	} >RAM AT>FLASH
 	
-	.noinit :
-	{
-		. = ALIGN (4);
-		PROVIDE (__noinit_start = .);
-		
-		KEEP(*(.noinit*))
-		
-		. = ALIGN (4);
-		PROVIDE (__noinit_end = .);
-	} >RAM
-	
 	/******************************************/
 	/* For no-init variables section */
 	.bss (NOLOAD) :
@@ -229,6 +210,17 @@ SECTIONS
 
 		. = ALIGN(4);
 		__bss_end = . ;
+	} >RAM
+	
+	.noinit :
+	{
+		. = ALIGN (4);
+		PROVIDE (__noinit_start = .);
+		
+		KEEP(*(.noinit*))
+		
+		. = ALIGN (4);
+		PROVIDE (__noinit_end = .);
 	} >RAM
 	
 	. = ALIGN (4);

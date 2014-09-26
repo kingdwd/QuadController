@@ -110,6 +110,7 @@ int mpu_set_sensors(unsigned char sensors);
 int mpu_set_accel_bias(const long *accel_bias);
 
 int mpu_set_gyro_bias_reg(long *gyro_bias);
+int mpu_get_gyro_bias_reg(uint16_t data[3]);
 
 int mpu_write_data(uint8_t reg, uint8_t* data, uint8_t len);
 

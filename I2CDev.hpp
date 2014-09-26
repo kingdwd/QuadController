@@ -292,8 +292,12 @@ class I2Cdev {
 
         	adapter.initialize(devAddr, tmp, length+1, 0, 0);
 
-        	while(!I2C_Master::start(&adapter));
+        	//wait for i2c bus to become available
+        	while(!I2C_Master::start(&adapter)) {
+        		xpcc::TickerTask::yield();
+          	}
 
+        	//wait for data to be sent
         	while(I2C_Master::isBusy()) {
         		xpcc::TickerTask::yield();
         	}
@@ -319,7 +323,9 @@ class I2Cdev {
 
         	adapter.initialize(devAddr, tmp, length*sizeof(uint16_t)+1, 0, 0);
 
-        	while(!I2C_Master::start(&adapter));
+        	while(!I2C_Master::start(&adapter)) {
+        		xpcc::TickerTask::yield();
+        	}
 
         	while(I2C_Master::isBusy()) {
         		xpcc::TickerTask::yield();

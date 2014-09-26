@@ -18,7 +18,7 @@
 #include <xpcc/debug.hpp>
 #include <xpcc/math/filter.hpp>
 
-#include <xpcc/io/terminal.hpp>
+#include "cmd_terminal.hpp"
 
 #include <math.h>
 
@@ -65,214 +65,14 @@ xpcc::log::Logger xpcc::log::error(null);
 #endif
 
 
-
+Mavlink mavlink;
 Radio radio;
 
 QuadController qController;
 
-class CmdTerminal : public Terminal {
-public:
-	CmdTerminal(IODevice& device) : Terminal(device), ios(device) {
-
-	};
-
-protected:
-	xpcc::IOStream ios;
-
-	void handleCommand(uint8_t nargs, char* argv[]) {
-
-		if(cmp(argv[0], "pid")) {
-
-			float kp = 0;
-			float kd = 0;
-			float ki = 0;
-
-			kp = toFloat(argv[1]);
-			ki = toFloat(argv[2]);
-			kd = toFloat(argv[3]);
-
-			stream.printf("PID Kp=%.3f Ki=%.3f Kd=%.3f\n", kp, ki, kd);
-
-			qController.setRatePID(kp, ki, kd);
-		}
-
-		else if(cmp(argv[0], "hpid")) {
-			float kp = 0;
-			float kd = 0;
-			float ki = 0;
-			float max = 0.2;
 
 
-			kp = toFloat(argv[1]);
-			ki = toFloat(argv[2]);
-			kd = toFloat(argv[3]);
-			max = toFloat(argv[4]);
-
-			stream.printf("Height PID Kp=%.3f Ki=%.3f Kd=%.3f max=%.3f\n", kp, ki, kd, max);
-
-			qController.setHeightPID(kp, ki, kd, max, true);
-
-		}
-		else if(cmp(argv[0], "erase")) {
-			printf("Erasing eeprom\n");
-			uint8_t t = 0;
-			eeprom.put(&EEData::token, t);
-			eeprom.readByte(0, t);
-			printf("%d\n", t);
-		}
-		else if(cmp(argv[0], "test")) {
-
-			//XPCC_LOG_DEBUG .printf("%d\n", qController.mpu.getAccelerationZ());
-		}
-		else if(cmp(argv[0], "radio")) {
-			//printf("Freq: %.4f\n", radio.freq);
-			//printf("afc: %.4f\n", radio.afc);
-			//printf("modemCfg: %d\n", radio.modemCfg);
-			//printf("FH channels: %d\n", radio.fhChannels);
-
-			//XPCC_LOG_DEBUG .printf("%d\n", qController.mpu.getAccelerationZ());
-		}
-		else if(cmp(argv[0], "freq")) {
-			float f = toFloat(argv[1]);
-			radio.setFrequency(f, 0.05);
-			//XPCC_LOG_DEBUG .printf("%d\n", qController.mpu.getAccelerationZ());
-		}
-
-		else if(cmp(argv[0], "i2r")) {
-			uint8_t addr = to_int(argv[1]);
-			uint8_t reg = to_int(argv[2]);
-
-			uint8_t buf[3];
-			buf[0] = reg;
-
-			xpcc::I2cWriteReadAdapter adapter;
-			adapter.initialize(addr, buf, 1, buf, 1);
-
-			I2cMaster2::startBlocking(&adapter);
-
-			ios.printf("status:%d, value: %x\n", I2cMaster2::getErrorState(), buf[0]);
-
-		}
-		else if(cmp(argv[0], "i2w")) {
-			uint8_t addr = to_int(argv[1]);
-			uint8_t reg = to_int(argv[2]);
-			uint8_t val = to_int(argv[3]);
-
-			uint8_t buf[3];
-			buf[0] = reg;
-			buf[1] = val;
-
-			xpcc::I2cWriteReadAdapter adapter;
-			adapter.initialize(addr, buf, 2, buf, 0);
-
-			I2cMaster2::startBlocking(&adapter);
-
-			ios.printf("status:%d, value: %x\n", I2cMaster2::getErrorState(), buf[0]);
-
-		}
-
-		else if(cmp(argv[0], "throttle")) {
-			float t = to_int(argv[1]) / 100.0;
-			qController.throttle = t;
-		}
-
-		else if(cmp(argv[0], "arm")) {
-			if(cmp(argv[1], "true")) {
-				qController.arm(true);
-			} else {
-				qController.arm(false);
-			}
-		}
-
-		else if(cmp(argv[0], "speed")) {
-			float spd[4];
-			spd[0] = to_int(argv[1]) / 100.0;
-			spd[1] = to_int(argv[2]) / 100.0;
-			spd[2] = to_int(argv[3]) / 100.0;
-			spd[3] = to_int(argv[4]) / 100.0;
-
-			ios.printf("Motor speed (%.2f,%.2f,%.2f,%.2f)\n", spd[0], spd[1], spd[2], spd[3]);
-			qController.setMotorOutput(spd);
-		}
-
-		else if(cmp(argv[0], "zero")) {
-			ios.printf("Zeroing sensors\n");
-			qController.zero();
-		}
-
-
-		else if(cmp(argv[0], "input_calib")) {
-			if(cmp(argv[1], "start")) {
-				ios.printf("Calibrating\n");
-				//qController.pwmInputs.startCalibration();
-			} else {
-				ios.printf("OK\n");
-				//qController.pwmInputs.stopCalibration();
-			}
-		}
-
-
-
-//		else if(cmp(argv[0], "baro")) {
-//			if(!qController.baro.initialize(0x77)) {
-//				XPCC_LOG_DEBUG .printf("baro init failed\n");
-//			} else {
-//				XPCC_LOG_DEBUG .printf("baro init OK\n");
-//			}
-//			XPCC_LOG_DEBUG .dump_buffer((uint8_t*)&qController.baro.calReg, sizeof(qController.baro.calReg));
-//		}
-
-		else if(cmp(argv[0], "scan")) {
-			xpcc::I2cWriteAdapter adapter;
-
-			uint8_t buf[3] = {0x0F};
-
-			XPCC_LOG_DEBUG << "Scanning i2c bus\n";
-			for(int i = 0; i < 128; i++) {
-				adapter.initialize(i, buf, 1);
-				I2cMaster2::startBlocking(&adapter);
-
-				if(I2cMaster2::getErrorState() != xpcc::I2cMaster::Error::AddressNack) {
-					XPCC_LOG_DEBUG .printf("Found device @ 0x%x\n", i);
-				}
-			}
-		}
-		else if(cmp(argv[0], "reset")) {
-			NVIC_SystemReset();
-		}
-
-		else if(cmp(argv[0], "flash")) {
-
-			LPC_WDT->WDFEED = 0x56;
-		}
-		else if(cmp(argv[0], "compass_stop")) {
-
-			qController.mag.stopCalibration();
-		}
-		else if(cmp(argv[0], "compass_start")) {
-
-			qController.mag.startCalibration();
-		}
-
-		else if(cmp(argv[0], "sendPacket")) {
-
-			radio.sendData((uint8_t*)4, 200);
-
-		}
-
-		else if(cmp(argv[0], "dump")) {
-			extern uint32_t crashData[3];
-			if(crashData[0]) {
-				XPCC_LOG_DEBUG .printf("pc  = 0x%08x\n", crashData[1]);
-				XPCC_LOG_DEBUG .printf("lr  = 0x%08x\n", crashData[2]);
-				delay_ms(500);
-			}
-		}
-	}
-
-};
-
-CmdTerminal cmd(device);
+CmdTerminal terminal(device);
 //CmdTerminal ucmd(uart);
 
 
@@ -530,6 +330,7 @@ int main() {
 
 	NVIC_SetPriority(USB_IRQn, 10);
 	NVIC_SetPriority(EINT3_IRQn, 0);
+	NVIC_SetPriority(SysTick_IRQn, 0);
 
 	TickerTask::tasksRun(idle);
 }

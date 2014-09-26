@@ -9,6 +9,10 @@
 #define QUADCONTROLLER_HPP_
 
 #include <xpcc/architecture.hpp>
+#include "radio.hpp"
+#include "cmd_terminal.hpp"
+#include "SensorProcessor.hpp"
+#include "pindefs.hpp"
 
 #define M_FRONT_LEFT 1
 #define M_FRONT_RIGHT 0
@@ -17,6 +21,7 @@
 
 using namespace xpcc;
 using namespace xpcc::lpc17;
+
 class Blinker : TickerTask {
 	PeriodicTimer<> t;
 public:
@@ -50,7 +55,6 @@ public:
 	}
 };
 
-Blinker blinker;
 
 
 class QuadController : public SensorProcessor {
@@ -161,7 +165,57 @@ public:
 
 		eeprom.get(&EEData::yawGain, yawGain);
 
+		float spd[] = {0,0,0,0};
+		setMotorOutput(spd);
+
 		this->SensorProcessor::handleInit();
+	}
+
+	void handleCommand(CmdTerminal &t, uint8_t nargs, char* argv[]) {
+
+		if(strcmp(argv[1], "set_rate_pid")==0) {
+			float kp = 0;
+			float kd = 0;
+			float ki = 0;
+
+			kp = t.toFloat(argv[2]);
+			ki = t.toFloat(argv[3]);
+			kd = t.toFloat(argv[4]);
+
+			printf("Set PIDs Kp=%.3f Ki=%.3f Kd=%.3f\n", kp, ki, kd);
+
+			setRatePID(kp, ki, kd);
+		} else
+		if(strcmp(argv[1], "set_pid")==0) {
+			float kp = 0;
+			float kd = 0;
+			float ki = 0;
+
+			kp = t.toFloat(argv[2]);
+			ki = t.toFloat(argv[3]);
+			kd = t.toFloat(argv[4]);
+
+			printf("Set PIDs Kp=%.3f Ki=%.3f Kd=%.3f\n", kp, ki, kd);
+
+			setPID(kp, ki, kd);
+		} else
+		if(strcmp(argv[1], "get_rate_pid")==0) {
+			printf("Angular Rate PID Kp=%.3f Ki=%.3f Kd=%.3f\n",
+					rollRateController.parameter.kp,
+					rollRateController.parameter.ki,
+					rollRateController.parameter.kd);
+		}
+		if(strcmp(argv[1], "get_pid")==0) {
+			printf("PID Kp=%.3f Ki=%.3f Kd=%.3f\n",
+					rollController.parameter.kp,
+					rollController.parameter.ki,
+					rollController.parameter.kd);
+		}
+		if(strcmp(argv[1], "get_imu")==0) {
+			t.ios << "Quat:" << qRotation << endl;
+			t.ios << "vGyro:" << vGyro * 180.0f/M_PI<< endl;
+			t.ios << "vAcc:" << vAcc << endl;
+		}
 	}
 
 	bool isArmed() {
@@ -169,11 +223,37 @@ public:
 	}
 
 	void handleTick() override {
-		static PeriodicTimer<> updateTimer(10);
+		static Timestamp lastRc = radio.rcPacketTimestamp;
 
-		if(updateTimer.isExpired()) {
-			static PeriodicTimer<> tPrint(200);
-			static Vector3f v;
+		if(lastRc != radio.rcPacketTimestamp) {
+
+			if(!isArmed() && (radio.rcData.switches & 0x01)) {
+				if(radio.rcData.throttleCh < 50) {
+					arm(true);
+				}
+			}
+
+			if(isArmed() && !(radio.rcData.switches & 0x01)
+					&& radio.rcData.throttleCh < 50) {
+				arm(false);
+			}
+
+			throttle = radio.rcData.throttleCh / 1024.0f;
+
+			static float yaw;
+			yaw -= (radio.rcData.yawCh-512)/1024.0f * (45 * M_PI/180.0 * 0.010f);
+
+			float roll = (radio.rcData.rollCh-512)/1024.0f * (20 * M_PI/180.0f);
+			float pitch = -(radio.rcData.pitchCh-512)/1024.0f * (20 * M_PI/180.0f);
+
+			qTarget = Quaternion<float>(yaw, pitch, roll);
+
+			lastRc = radio.rcPacketTimestamp;
+		}
+
+		if(0) {
+			//static PeriodicTimer<> tPrint(200);
+			//static Vector3f v;
 
 //			if(pwmInputs.isActive()) {
 //
@@ -462,16 +542,17 @@ public:
 	Pid<float> yawController;
 	Pid<float> heightController;
 
-	float yawGain = 1.7;
+	float yawGain;
 
 	//Radio controller pwm inputs
 	//ControllerInputs pwmInputs;
-
+	Blinker blinker;
 private:
 	uint32_t prescale;
 
 	float motorSpeeds[4];
 };
 
+extern QuadController qController;
 
 #endif /* QUADCONTROLLER_HPP_ */

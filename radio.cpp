@@ -31,11 +31,11 @@ void Radio::handleInit() {
 
 	setModeRx();
 }
-
+static ProfileTimer pf;
 void Radio::handleTick() {
 	if(!transmitting()) {
 		if(available()) {
-			uint8_t buf[_bufLen];
+			uint8_t buf[255];
 			uint8_t len = sizeof(buf);
 			recv(buf, &len);
 
@@ -44,7 +44,10 @@ void Radio::handleTick() {
 
 				switch(inPkt->id) {
 				case PACKET_RC:
-
+					if(len == sizeof(RCPacket)) {
+						rcData = *((RCPacket*)inPkt);
+						rcPacketTimestamp = Clock::now();
+					}
 					break;
 				case PACKET_RF_PARAM_SET:{
 					RadioCfgPacket* cfg = (RadioCfgPacket*)inPkt;
@@ -89,15 +92,18 @@ void Radio::handleTick() {
 				//received packet, send data back
 				//if no data is available, send only ack
 				if(inPkt->id >= PACKET_RC) {
-					lastAckSeq = inPkt->ackSeq; //set last acknowledged ours packet
-
+					//lastAckSeq = inPkt->ackSeq; //set last acknowledged ours packet
 					if(fhChannels)
 						setFHChannel((inPkt->seq^0x55) % fhChannels);
 
 					if(dataLen) {
-						if(lastAckSeq == seq) {
+						if(inPkt->ackSeq == seq) {
 							//send next fragment
 							dataPos += dataSent;
+							if((dataPos - sizeof(Packet)) == dataLen) {
+								dataLen = 0;
+								goto sendack;
+							}
 						} else {
 							numRetries++;
 						}
@@ -116,11 +122,9 @@ void Radio::handleTick() {
 
 						} else {
 							hdr->id = PACKET_DATA_LAST;
-							dataLen = 0; //packet is sent,
-										 //clear dataLen
 						}
 						hdr->seq = ++seq;
-						hdr->ackSeq = inPkt->seq;
+						hdr->ackSeq = inPkt->seq; //acknowledge received packet
 
 						printf("send frag %d %d\n", dataSent, dataPos-sizeof(Packet));
 
@@ -128,11 +132,12 @@ void Radio::handleTick() {
 								dataSent+sizeof(Packet));
 
 					} else { //send only ack
+sendack:
 						Packet p;
 						p.id = PACKET_ACK;
 						p.seq = ++seq;
-						p.ackSeq = inPkt->seq;
-
+						p.ackSeq = inPkt->seq; //acknowledge received packet
+						//delay_ms(2);
 						RH_RF22::send((uint8_t*)&p, sizeof(Packet));
 					}
 				}
@@ -144,7 +149,7 @@ void Radio::handleTick() {
 	}
 }
 
-bool Radio::sendData(const uint8_t* data, uint8_t len) {
+bool Radio::sendPacket(const uint8_t* data, uint8_t len) {
 	if(!dataLen) {
 		dataLen = len;
 		if(dataLen > sizeof(packetBuf)-sizeof(Packet))
@@ -202,4 +207,8 @@ uint8_t Radio::spiBurstRead0(uint8_t reg, uint8_t* dest, uint8_t len) {
 
     return status;
 
+}
+
+void Radio::handleTxComplete() {
+	setModeRx();
 }

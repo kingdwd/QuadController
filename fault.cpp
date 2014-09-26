@@ -41,6 +41,10 @@ void Hard_Fault_Handler(uint32_t stack[]) {
 
 	//register uint32_t* stack = (uint32_t*)__get_MSP();
 
+	crashData[0] = 1;
+	crashData[1] = stack[pc];
+	crashData[2] = stack[lr];
+
 	XPCC_LOG_DEBUG .printf("Hard Fault\n");
 
 	XPCC_LOG_DEBUG .printf("r0  = 0x%08x\n", stack[r0]);
@@ -51,10 +55,6 @@ void Hard_Fault_Handler(uint32_t stack[]) {
 	XPCC_LOG_DEBUG .printf("lr  = 0x%08x\n", stack[lr]);
 	XPCC_LOG_DEBUG .printf("pc  = 0x%08x\n", stack[pc]);
 	XPCC_LOG_DEBUG .printf("psr = 0x%08x\n", stack[psr]);
-
-	crashData[0] = 1;
-	crashData[1] = stack[pc];
-	crashData[2] = stack[lr];
 
 	while(1);
 

@@ -16,7 +16,7 @@
 
 #include "sensors/MotionDriver/inv_mpu_dmp_motion_driver.h"
 #include "sensors/MotionDriver/inv_mpu.h"
-
+#include "pindefs.hpp"
 #include "Ultrasonic.hpp"
 #include "eeprom/eedata.hpp"
 #include "sensors/ms5611.hpp"
@@ -112,7 +112,56 @@ public:
 	}
 };
 
+static inline unsigned short inv_row_2_scale(const signed char *row)
+{
+    unsigned short b;
 
+    if (row[0] > 0)
+        b = 0;
+    else if (row[0] < 0)
+        b = 4;
+    else if (row[1] > 0)
+        b = 1;
+    else if (row[1] < 0)
+        b = 5;
+    else if (row[2] > 0)
+        b = 2;
+    else if (row[2] < 0)
+        b = 6;
+    else
+        b = 7;      // error
+    return b;
+}
+
+/* The sensors can be mounted onto the board in any orientation. The mounting
+ * matrix seen below tells the MPL how to rotate the raw data from thei
+ * driver(s).
+ * TODO: The following matrices refer to the configuration on an internal test
+ * board at Invensense. If needed, please modify the matrices to match the
+ * chip-to-body matrix for your particular set up.
+ */
+
+static signed char gyro_orientation[9] = { -1, 0, 0,
+                                           0, -1, 0,
+                                           0, 0, 1};
+
+static inline unsigned short inv_orientation_matrix_to_scalar(const signed char *mtx)
+{
+    unsigned short scalar;
+    /*
+
+       XYZ  010_001_000 Identity Matrix
+       XZY  001_010_000
+       YXZ  010_000_001
+       YZX  000_010_001
+       ZXY  001_000_010
+       ZYX  000_001_010
+     */
+    scalar = inv_row_2_scale(mtx);
+    scalar |= inv_row_2_scale(mtx + 3) << 3;
+    scalar |= inv_row_2_scale(mtx + 6) << 6;
+    return scalar;
+}
 
 class SensorProcessor : TickerTask {
 public:
@@ -129,6 +178,8 @@ public:
 	xpcc::Quaternion<float> qRotationOffset;
 	xpcc::Quaternion<float> qTrim;
 
+	bool calibrated;
+	bool calibrating;
 
 	float ahrsHeading;
 	float compassHeading;
@@ -156,9 +207,6 @@ public:
 
 		mpu_init(0);
 
-		long gyro[3], accel[3];
-		mpu_run_self_test(gyro, accel);
-
 		mpu_set_sensors(INV_XYZ_GYRO | INV_XYZ_ACCEL);// enable all of the sensors
 
 		mpu_set_gyro_fsr(2000);
@@ -169,24 +217,28 @@ public:
 
 		dmp_load_motion_driver_firmware();
 
-		XPCC_LOG_DEBUG .printf("%d %d %d\n", gyro[0], gyro[1], gyro[2]);
-
-		long gyroOffs[3] = {gyro[0]/2000, gyro[1]/2000, gyro[2]/2000};
-		mpu_set_gyro_bias_reg(gyroOffs);
-		//mpu_write_data(0x13, (uint8_t*)gyroOffs, 6);
+		//long gyroOffs[3] = {gyro[0]/2000, gyro[1]/2000, gyro[2]/2000};
+		//mpu_set_gyro_bias_reg(gyroOffs);
 
 		dmp_enable_feature(DMP_FEATURE_6X_LP_QUAT | DMP_FEATURE_SEND_RAW_ACCEL | DMP_FEATURE_SEND_CAL_GYRO |
 		        DMP_FEATURE_GYRO_CAL);
+
 
 		dmp_set_fifo_rate(200);
 
 		mpu_set_dmp_state(1);
 		mpu_set_bypass(true);
-
-
+		dmp_set_orientation(inv_orientation_matrix_to_scalar(gyro_orientation));
 
 		mag.initialize(0x1E);
 
+		int32_t reg[3];
+		eeprom.get(&EEData::gyroBias, reg);
+		printf("stored bias %d %d %d\n", reg[0], reg[1], reg[2]);
+
+		mpu_write_mem(D_EXT_GYRO_BIAS_X, 4, (uint8_t*)&reg[0]);
+		mpu_write_mem(D_EXT_GYRO_BIAS_Y, 4, (uint8_t*)&reg[1]);
+		mpu_write_mem(D_EXT_GYRO_BIAS_Z, 4, (uint8_t*)&reg[2]);
 
 //		if(!baro.initialize(0x77)) {
 //			XPCC_LOG_DEBUG .printf("baro init failed\n");
@@ -255,13 +307,15 @@ public:
 	}
 
 	void zero() {
-		gyroCalib.restart(500);
+
 		ledGreen::set();
 
 		accZero = 0;
-		gyroOffset = 0;
 
-		tCalibrated = false;
+		gyroAverage = {1,1,1};
+
+		calibrated = false;
+		calibrating = true;
 		numSamples = 0;
 	}
 
@@ -319,7 +373,7 @@ public:
 		if(mpuTimer.isExpired()) {
 			int16_t intStatus;
 
-		    mpu_get_int_status(&intStatus);                       // get the current MPU state
+			mpu_get_int_status(&intStatus);                       // get the current MPU state
 		    if(intStatus & MPU_INT_STATUS_FIFO_OVERFLOW) {
 		    	XPCC_LOG_DEBUG << "FIFO overflow\n";
 		    	mpu_reset_fifo();
@@ -331,34 +385,29 @@ public:
 		    	int16_t sensors;
 		    	uint8_t more;
 
+				float dt = (lpc17::RitClock::now() - tRead).getTime() / (float)SystemCoreClock;
+				tRead = lpc17::RitClock::now();
+
 		    	dmp_read_fifo(gyro, accel, quat, &timestamp, &sensors, &more);
 
-		    	Quaternion<Q30> q;
-		    	q.w.rawVal = quat[0];
-		    	q.x.rawVal = quat[1];
-		    	q.y.rawVal = quat[2];
-		    	q.z.rawVal = quat[3];
+		    	Quaternion<> q;
+		    	q.w = quat[0] / (float)(1<<30);
+		    	q.x = quat[1] / (float)(1<<30);
+		    	q.y = quat[2] / (float)(1<<30);
+		    	q.z = quat[3] / (float)(1<<30);
 
 		    	qRotation = q;
 
-		    	qRotation = {quat[0], quat[1], quat[2], quat[3]};
-		    	qRotation.normalize();
+		    	vGyro.x = gyro[0]/(16.4f / (M_PI/180.0f));
+		    	vGyro.y = gyro[1]/(16.4f / (M_PI/180.0f));
+		    	vGyro.z = gyro[2]/(16.4f / (M_PI/180.0f));
 
-		    	vGyro.x = gyro[0]/16.4;
-		    	vGyro.y = gyro[1]/16.4;
-		    	vGyro.z = gyro[2]/16.4;
+		    	vAcc.x = accel[0]/16384.0f;
+		    	vAcc.y = accel[1]/16384.0f;
+		    	vAcc.z = accel[2]/16384.0f;
 
-		    	vAcc.x = accel[0]/16384.0;
-		    	vAcc.y = accel[1]/16384.0;
-		    	vAcc.z = accel[2]/16384.0;
-
-		    	Fp32f<16> a = 25.6;
-		    	Fp32f<23> b = 10.0;
-
-		    	a = b;
-
-		    	//XPCC_LOG_DEBUG << timestamp << qRotation << vAcc << vGyro<< endl;
-
+		    	//XPCC_LOG_DEBUG << dt << " " << qRotation << endl;
+		    	//XPCC_LOG_DEBUG << vGyro << vAcc << endl;
 
 		    	//static float headingCompensation;
 		    	//Quaternion<float> tmp(Vector3f(0, 0, 1), headingCompensation);
@@ -370,6 +419,31 @@ public:
 		    	//float e = difangrad(compassHeading, ahrsHeading);
 
 		    	//headingCompensation += e*0.0005;
+
+
+		    	if(calibrated) {
+		    		onSensorsUpdated(dt);
+		    	} else {
+		    		gyroAverage = (gyroAverage*89.0 + vGyro*180/M_PI)/90.0;
+
+		    		//XPCC_LOG_DEBUG .printf("%.5f\n", gyroAverage.getLengthSquared()) << endl;
+
+		    		if(gyroAverage.getLengthSquared() < 0.01) {
+		    			calibrated = true;
+		    			uint16_t data[3];
+		    			mpu_get_gyro_bias_reg(data);
+
+		    			int32_t reg[3];
+		    			mpu_read_mem(D_EXT_GYRO_BIAS_X, 4, (uint8_t*)&reg[0]);
+		    			mpu_read_mem(D_EXT_GYRO_BIAS_Y, 4, (uint8_t*)&reg[1]);
+		    			mpu_read_mem(D_EXT_GYRO_BIAS_Z, 4, (uint8_t*)&reg[2]);
+
+		    			printf("bias %d %d %d\n", reg[0], reg[1], reg[2]);
+		    			eeprom.put(&EEData::gyroBias, reg);
+
+		    			ledGreen::reset();
+		    		}
+		    	}
 
 		    	if(!more)
 		    		mpuTimer.restart(4);
@@ -503,12 +577,12 @@ public:
 				gyroCalib.stop();
 
 				accZero /= numSamples;
-				gyroOffset /= numSamples;
+				//gyroOffset /= numSamples;
 
 				//gMagnitude = accZero.getLength();
 
 				XPCC_LOG_DEBUG .printf("calibration complete\n");
-				XPCC_LOG_DEBUG << "Gyro offset:" << gyroOffset << "\n";
+				//XPCC_LOG_DEBUG << "Gyro offset:" << gyroOffset << "\n";
 				XPCC_LOG_DEBUG << "Acc zero value: " << accZero << "\n";
 
 				if(qRotationOffset == Quaternion<float>(1.0, 0, 0, 0)) {
@@ -516,7 +590,7 @@ public:
 					auto z = accZero;
 					auto cross = z.cross(g);
 					qRotationOffset = Quaternion<float>(
-							sqrtf(z.getLengthSquared() * g.getLengthSquared())
+							std::sqrt(z.getLengthSquared() * g.getLengthSquared())
 									+ z * g, cross.x, cross.y, cross.z);
 					qRotationOffset.normalize();
 
@@ -655,7 +729,8 @@ public:
 
 	//accelerometer value at zero
 	xpcc::Vector3f accZero;
-	xpcc::Vector3f gyroOffset;
+
+	xpcc::Vector3f gyroAverage;
 
 
 	//MPU6050 mpu;

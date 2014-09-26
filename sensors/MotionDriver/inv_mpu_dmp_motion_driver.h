@@ -49,6 +49,10 @@
 
 #define INV_WXYZ_QUAT       (0x100)
 
+#define D_EXT_GYRO_BIAS_X       (61 * 16)
+#define D_EXT_GYRO_BIAS_Y       (61 * 16) + 4
+#define D_EXT_GYRO_BIAS_Z       (61 * 16) + 8
+
 /* Set up functions. */
 int dmp_load_motion_driver_firmware(void);
 int dmp_set_fifo_rate(unsigned short rate);
