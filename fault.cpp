@@ -7,7 +7,7 @@
 
 #include <xpcc/debug.hpp>
 #include <xpcc/architecture.hpp>
-
+#include "pindefs.hpp"
 
 
 enum { r0, r1, r2, r3, r12, lr, pc, psr};
@@ -36,6 +36,7 @@ extern "C" void BusFault_Handler(void)
 
 uint32_t crashData[3] __attribute__((section(".noinit")));
 
+
 extern "C"
 void Hard_Fault_Handler(uint32_t stack[]) {
 
@@ -45,18 +46,21 @@ void Hard_Fault_Handler(uint32_t stack[]) {
 	crashData[1] = stack[pc];
 	crashData[2] = stack[lr];
 
-	XPCC_LOG_DEBUG .printf("Hard Fault\n");
+//	XPCC_LOG_DEBUG .printf("Hard Fault\n");
+//
+//	XPCC_LOG_DEBUG .printf("r0  = 0x%08x\n", stack[r0]);
+//	XPCC_LOG_DEBUG .printf("r1  = 0x%08x\n", stack[r1]);
+//	XPCC_LOG_DEBUG .printf("r2  = 0x%08x\n", stack[r2]);
+//	XPCC_LOG_DEBUG .printf("r3  = 0x%08x\n", stack[r3]);
+//	XPCC_LOG_DEBUG .printf("r12 = 0x%08x\n", stack[r12]);
+//	XPCC_LOG_DEBUG .printf("lr  = 0x%08x\n", stack[lr]);
+//	XPCC_LOG_DEBUG .printf("pc  = 0x%08x\n", stack[pc]);
+//	XPCC_LOG_DEBUG .printf("psr = 0x%08x\n", stack[psr]);
 
-	XPCC_LOG_DEBUG .printf("r0  = 0x%08x\n", stack[r0]);
-	XPCC_LOG_DEBUG .printf("r1  = 0x%08x\n", stack[r1]);
-	XPCC_LOG_DEBUG .printf("r2  = 0x%08x\n", stack[r2]);
-	XPCC_LOG_DEBUG .printf("r3  = 0x%08x\n", stack[r3]);
-	XPCC_LOG_DEBUG .printf("r12 = 0x%08x\n", stack[r12]);
-	XPCC_LOG_DEBUG .printf("lr  = 0x%08x\n", stack[lr]);
-	XPCC_LOG_DEBUG .printf("pc  = 0x%08x\n", stack[pc]);
-	XPCC_LOG_DEBUG .printf("psr = 0x%08x\n", stack[psr]);
-
-	while(1);
+	while(1) {
+		ledRed::set();
+		ledGreen::set();
+	}
 
 	//for(int i = 0; i < 10000; i++) {}
 	//NVIC_SystemReset();

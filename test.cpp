@@ -10,6 +10,9 @@
 #include <RC_Channel.h>
 #include "AP_HAL_XPCC/AP_HAL_XPCC.h"
 #include <stdio.h>
+#include <xpcc/container.hpp>
+
+using namespace xpcc::lpc17;
 
 HAL_XPCC h;
 
@@ -19,8 +22,17 @@ const AP_HAL::HAL& hal = h;
 
 //AP_MotorsQuad motors(c, c, c, c, 100);
 
+
+
 void ap_test(char *argv[], int argc) {
 	printf("%d\n", hal.rcin->read(2));
+
+	BufferedUart<Uart0> uart(57600, 128, 128);
+	XPCC_LOG_DEBUG .printf("uart write\n");
+	for(int i = 0; i < 64; i++) {
+		uart.write('a');
+	}
+
 
 	if(strcmp(argv[1], "init")==0){
 		hal.gpio->init();
@@ -32,6 +44,8 @@ void ap_test(char *argv[], int argc) {
 			if(src)
 				printf("analog read %.5f\n", src->read_latest());
 		}
+
+
 //	hal.rcout->enable_ch(0);
 //	hal.rcout->enable_ch(1);
 //	hal.rcout->enable_ch(2);

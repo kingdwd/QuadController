@@ -7,9 +7,9 @@
 
 using namespace Empty;
 
-static UARTDriver uartADriver;
-static UARTDriver uartBDriver;
-static UARTDriver uartCDriver;
+static UARTDriver uartADriver(0);
+static UARTDriver uartBDriver(0);
+static UARTDriver uartCDriver(0);
 static Semaphore  i2cSemaphore;
 static I2CDriver  i2cDriver(&i2cSemaphore);
 static SPIDeviceManager spiDeviceManager;

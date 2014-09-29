@@ -174,7 +174,27 @@ void CmdTerminal::handleCommand(uint8_t nargs, char* argv[]) {
 		radio.sendPacket((uint8_t*) 4, 200);
 
 	}
+	else if(cmp(argv[0], "eeread")) {
+		uint16_t addr = toInt(argv[1]);
 
+		uint8_t c = 0;
+		if(!eeprom.readByte(addr, c)) {
+			printf("Failed\n");
+		} else {
+			printf("> %02x\n", c);
+		}
+	}
+	else if(cmp(argv[0], "eewrite")) {
+		uint16_t addr = toInt(argv[1]);
+		uint16_t b = toInt(argv[2]);
+
+		uint8_t c = 0;
+		if(!eeprom.writeByte(addr, b)) {
+			printf("Failed\n");
+		} else {
+			printf("OK\n");
+		}
+	}
 	else if (cmp(argv[0], "dump")) {
 		extern uint32_t crashData[3];
 		if (crashData[0]) {
