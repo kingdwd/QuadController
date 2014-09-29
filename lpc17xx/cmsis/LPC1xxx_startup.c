@@ -117,6 +117,8 @@ inline __attribute__((always_inline)) void __segs_init() {
 }
 void boot_entry(void) __attribute__((noreturn));
 
+void _init() {
+}
 
 void boot_entry(void)
 {
@@ -128,7 +130,7 @@ void boot_entry(void)
 	__xpcc_initialize_memory();
 
     __ctors_init();
-
+    //__libc_init_array();
 
 	main();
 

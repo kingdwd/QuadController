@@ -8,11 +8,10 @@ using namespace Empty;
 
 extern const AP_HAL::HAL& hal;
 
+const uint8_t analogMap[8] = { 0, 0, GPIO_PIN(0, 25), GPIO_PIN(0, 26),
+		0/*PIN(1,30)*/, GPIO_PIN(1, 31), GPIO_PIN(0, 3), GPIO_PIN(0, 2) };
 
-#define PIN(port, pin) ((pin<<3)|port)
-
-const uint8_t analogMap[8] = {0, 0, PIN(0,25), PIN(0,26), 0/*PIN(1,30)*/, PIN(1,31), PIN(0,3), PIN(0,2)};
-LPC_GPIO_TypeDef* const ports[] = {LPC_GPIO0, LPC_GPIO1, LPC_GPIO2, LPC_GPIO3};
+LPC_GPIO_TypeDef* const ports[] = { LPC_GPIO0, LPC_GPIO1, LPC_GPIO2, LPC_GPIO3 };
 
 GPIO::GPIO()
 {}
@@ -27,9 +26,9 @@ void GPIO::pinMode(uint8_t pin, uint8_t output)
 
 	if(port <= 3) {
 		if(output) {
-			ports[port]->FIODIR |= (1<<pin);
+			ports[port]->FIODIR |= (1<<p);
 		} else {
-			ports[port]->FIODIR &= ~(1<<pin);
+			ports[port]->FIODIR &= ~(1<<p);
 		}
 	}
 }
@@ -50,17 +49,18 @@ uint8_t GPIO::read(uint8_t pin) {
 	uint8_t port = pin & 0x03;
 	uint8_t p = (pin >> 3) ;
 
-	return ports[port]->FIOPIN & (1<<pin);
+	return ports[port]->FIOPIN & (1<<p);
 }
 
 void GPIO::write(uint8_t pin, uint8_t value)
 {
 	uint8_t port = pin & 0x03;
 	uint8_t p = (pin >> 3) ;
+
 	if(value)
-		ports[port]->FIOSET = (1<<pin);
+		ports[port]->FIOSET = (1<<p);
 	else
-		ports[port]->FIOCLR = (1<<pin);
+		ports[port]->FIOCLR = (1<<p);
 }
 
 void GPIO::toggle(uint8_t pin)

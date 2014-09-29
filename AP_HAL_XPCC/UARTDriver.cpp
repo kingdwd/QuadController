@@ -4,7 +4,7 @@
 using namespace Empty;
 
 UARTDriver::UARTDriver(xpcc::IODevice* device) :
-	_device(device)
+	_device(device), _blocking_writes(0)
 {
 
 }
@@ -19,10 +19,11 @@ void UARTDriver::end() {
 
 }
 void UARTDriver::flush() {
-
+	if(_device)
+		_device->flush();
 }
 bool UARTDriver::is_initialized() {
-	return false;
+	return _device != 0;
 }
 
 void UARTDriver::set_blocking_writes(bool blocking) {
@@ -31,21 +32,35 @@ void UARTDriver::set_blocking_writes(bool blocking) {
 
 bool UARTDriver::tx_pending() { return false; }
 
-/* Empty implementations of Stream virtual methods */
 int16_t UARTDriver::available() {
-	return 0;
+	if(!_device)
+		return 0;
+
+	return _device->rxAvailable();
 }
 int16_t UARTDriver::txspace() {
-	return 1;
+	if(!_device)
+		return -1;
+	return _device->txAvailable();
 }
 int16_t UARTDriver::read() {
-	return -1;
+	if(!_device)
+		return -1;
+	return _device->read();
 }
 
-/* Empty implementations of Print virtual methods */
 size_t UARTDriver::write(uint8_t c) {
-	_device->write(c);
-	return 1;
+	if(!_device)
+		return 0;
+	if(_blocking_writes) {
+		return _device->write(c);
+	} else {
+		if(_device->txAvailable() > 0) {
+			_device->write(c);
+			return 1;
+		}
+	}
+	return 0;
 }
 
 size_t UARTDriver::write(const uint8_t *buffer, size_t size)

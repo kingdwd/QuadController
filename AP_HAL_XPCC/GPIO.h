@@ -4,6 +4,8 @@
 
 #include <AP_HAL_Empty.h>
 
+#define GPIO_PIN(port, pin) ((pin<<3)|port)
+
 class Empty::GPIO : public AP_HAL::GPIO {
 public:
     GPIO();

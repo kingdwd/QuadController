@@ -34,7 +34,9 @@ extern "C" void BusFault_Handler(void)
 		       "B Hard_Fault_Handler");
 }
 
+
 uint32_t crashData[3] __attribute__((section(".noinit")));
+
 
 
 extern "C"
@@ -42,7 +44,7 @@ void Hard_Fault_Handler(uint32_t stack[]) {
 
 	//register uint32_t* stack = (uint32_t*)__get_MSP();
 
-	crashData[0] = 1;
+	crashData[0] = 0xFAFA5555;
 	crashData[1] = stack[pc];
 	crashData[2] = stack[lr];
 

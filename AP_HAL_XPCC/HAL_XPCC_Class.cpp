@@ -7,9 +7,12 @@
 
 using namespace Empty;
 
-static UARTDriver uartADriver(0);
-static UARTDriver uartBDriver(0);
-static UARTDriver uartCDriver(0);
+extern UARTDriver uartADriver;
+extern UARTDriver uartBDriver;
+extern UARTDriver uartCDriver;
+extern UARTDriver uartDDriver;
+extern UARTDriver uartEDriver;
+
 static Semaphore  i2cSemaphore;
 static I2CDriver  i2cDriver(&i2cSemaphore);
 static SPIDeviceManager spiDeviceManager;
@@ -26,8 +29,8 @@ HAL_XPCC::HAL_XPCC() :
         &uartADriver,
         &uartBDriver,
         &uartCDriver,
-        NULL,            /* no uartD */
-        NULL,            /* no uartE */
+        &uartDDriver,
+        &uartEDriver,
         &i2cDriver,
         &spiDeviceManager,
         &analogIn,

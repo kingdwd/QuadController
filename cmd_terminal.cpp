@@ -11,6 +11,8 @@
 #include "QuadController.hpp"
 #include <xpcc/architecture/peripheral/i2c_adapter.hpp>
 
+extern uint32_t crashData[3];
+
 void CmdTerminal::handleCommand(uint8_t nargs, char* argv[]) {
 	if (cmp(argv[0], "quad")) {
 		qController.handleCommand(*this, nargs, argv);
@@ -196,12 +198,15 @@ void CmdTerminal::handleCommand(uint8_t nargs, char* argv[]) {
 		}
 	}
 	else if (cmp(argv[0], "dump")) {
-		extern uint32_t crashData[3];
-		if (crashData[0]) {
+		if (crashData[0] == 0xFAFA5555) {
+			printf("------\n");
 			XPCC_LOG_DEBUG.printf("pc  = 0x%08x\n", crashData[1]);
 			XPCC_LOG_DEBUG.printf("lr  = 0x%08x\n", crashData[2]);
-			delay_ms(500);
+			printf("------\n");
+		} else {
+			printf("No dump\n");
 		}
+
 	} else if (cmp(argv[0], "flashboot")) {
 		uint16_t binLen;
 		uint16_t len = binLen = toInt(argv[1]);
@@ -225,8 +230,7 @@ void CmdTerminal::handleCommand(uint8_t nargs, char* argv[]) {
 		while (len) {
 
 			while (len && pos < sizeof(buf)) {
-				while (!device.read((char&) buf[pos]))
-					;
+				while ((buf[pos] = device.read()) == -1);
 				pos++;
 				len--;
 			}
