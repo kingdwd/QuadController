@@ -5,6 +5,7 @@
 	<projects>
 		<project>xpcc</project>
 		<project>RadioHead</project>
+		<project>APMLib</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

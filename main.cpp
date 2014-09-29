@@ -31,6 +31,7 @@
 #include "mavlink.hpp"
 #include "radio.hpp"
 
+
 using namespace xpcc;
 using namespace xpcc::lpc17;
 
@@ -292,8 +293,8 @@ void panic(const char* msg) {
 int main() {
 	test::setOutput(false);
 	//debugIrq = true;
-	ledRed::setOutput(false);
-	ledGreen::setOutput(false);
+	ledRed::setOutput(true);
+	ledGreen::setOutput(true);
 
 	lpc17::RitClock::initialize();
 
@@ -325,12 +326,16 @@ int main() {
 	usbConnPin::setOutput(true);
 	device.connect();
 
+	lpc17::ADC::init();
+	lpc17::ADC::burstMode(true);
+
 	//initialize eeprom
 	eeprom.initialize();
 
 	NVIC_SetPriority(USB_IRQn, 10);
 	NVIC_SetPriority(EINT3_IRQn, 0);
 	NVIC_SetPriority(SysTick_IRQn, 0);
+
 
 	TickerTask::tasksRun(idle);
 }

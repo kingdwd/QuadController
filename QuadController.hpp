@@ -67,31 +67,31 @@ public:
 		qTarget(1.0, 0, 0, 0)
 	{
 
-		Pinsel::setFunc(2,2,1);
-		Pinsel::setFunc(2,3,1);
-		Pinsel::setFunc(2,4,1);
-		Pinsel::setFunc(2,5,1);
-
-		PWM::initTimer(10);
-
-		const int freq = 100;
-		prescale = SystemCoreClock / 10 / freq;
-
-		PWM::matchUpdate(0, prescale);
-
-		PWM::configureMatch(0, PWM::MatchFlags::RESET_ON_MATCH);
-
-		PWM::channelEnable(3);
-		PWM::channelEnable(4);
-		PWM::channelEnable(5);
-		PWM::channelEnable(6);
-
-		PWM::matchUpdate(3, 0);
-		PWM::matchUpdate(4, 0);
-		PWM::matchUpdate(5, 0);
-		PWM::matchUpdate(6, 0);
-
-		PWM::enable();
+//		Pinsel::setFunc(2,2,1);
+//		Pinsel::setFunc(2,3,1);
+//		Pinsel::setFunc(2,4,1);
+//		Pinsel::setFunc(2,5,1);
+//
+//		PWM::initTimer(10);
+//
+//		const int freq = 100;
+//		prescale = SystemCoreClock / 10 / freq;
+//
+//		PWM::matchUpdate(0, prescale);
+//
+//		PWM::configureMatch(0, PWM::MatchFlags::RESET_ON_MATCH);
+//
+//		PWM::channelEnable(3);
+//		PWM::channelEnable(4);
+//		PWM::channelEnable(5);
+//		PWM::channelEnable(6);
+//
+//		PWM::matchUpdate(3, 0);
+//		PWM::matchUpdate(4, 0);
+//		PWM::matchUpdate(5, 0);
+//		PWM::matchUpdate(6, 0);
+//
+//		PWM::enable();
 
 	}
 
@@ -499,20 +499,20 @@ public:
 	 ---      ---
 */
 	void setMotorOutput(const float speeds[4]) {
-		int min = prescale / 10; //1ms pulsewidth = 0% motor output
-		int max = prescale / 5; //2ms pulsewidth = 100% motor output
-		max /= 2;
-
-		memcpy(motorSpeeds, speeds, sizeof(float)*4);
-
-		//XPCC_LOG_DEBUG .printf("%.2f %.2f %.2f %.2f\n", speeds[0], speeds[1], speeds[2], speeds[3]);
-
-		auto m = PWM::multiMatchUpdate();
-		m.set(3, min + max * speeds[0]);
-		m.set(4, min + max * speeds[1]);
-		m.set(5, min + max * speeds[2]);
-		m.set(6, min + max * speeds[3]);
-		m.commit(PWM::UpdateType::PWM_MATCH_UPDATE_NEXT_RST);
+//		int min = prescale / 10; //1ms pulsewidth = 0% motor output
+//		int max = prescale / 5; //2ms pulsewidth = 100% motor output
+//		max /= 2;
+//
+//		memcpy(motorSpeeds, speeds, sizeof(float)*4);
+//
+//		//XPCC_LOG_DEBUG .printf("%.2f %.2f %.2f %.2f\n", speeds[0], speeds[1], speeds[2], speeds[3]);
+//
+//		auto m = PWM::multiMatchUpdate();
+//		m.set(3, min + max * speeds[0]);
+//		m.set(4, min + max * speeds[1]);
+//		m.set(5, min + max * speeds[2]);
+//		m.set(6, min + max * speeds[3]);
+//		m.commit(PWM::UpdateType::PWM_MATCH_UPDATE_NEXT_RST);
 	}
 
 	//state variables

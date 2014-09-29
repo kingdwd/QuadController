@@ -16,6 +16,11 @@ void CmdTerminal::handleCommand(uint8_t nargs, char* argv[]) {
 		qController.handleCommand(*this, nargs, argv);
 	}
 
+	if (cmp(argv[0], "ap_test")) {
+		extern void ap_test(char *a[], int argc);
+		ap_test(argv, nargs);
+	}
+
 	else if (cmp(argv[0], "hpid")) {
 		float kp = 0;
 		float kd = 0;
