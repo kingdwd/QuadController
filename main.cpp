@@ -284,6 +284,7 @@ void idle() {
 		LPC_WDT->WDFEED = 0xAA;
 		LPC_WDT->WDFEED = 0x55;
 	}
+
 }
 
 void panic(const char* msg) {

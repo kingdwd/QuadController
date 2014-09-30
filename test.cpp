@@ -16,8 +16,7 @@
 
 using namespace xpcc::lpc17;
 
-const AP_HAL::HAL& hal = AP_HAL_XPCC;
-
+extern const AP_HAL::HAL& hal;// = AP_HAL_XPCC;
 
 //RC_Channel c(0);
 
@@ -32,6 +31,8 @@ Empty::UARTDriver uartDDriver(0);
 Empty::UARTDriver uartEDriver(0);
 
 void ap_test(char *argv[], int argc) {
+	hal.init(0, 0);
+
 	printf("%d\n", hal.rcin->read(2));
 
 	Pinsel::setFunc(0, 2, 1);

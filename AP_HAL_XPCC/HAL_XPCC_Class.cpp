@@ -1,6 +1,6 @@
 
 #include <AP_HAL.h>
-#if CONFIG_HAL_BOARD == HAL_BOARD_EMPTY
+#if CONFIG_HAL_BOARD == HAL_BOARD_XPCC
 
 #include "HAL_XPCC_Class.h"
 #include "AP_HAL_Empty_Private.h"
@@ -40,8 +40,7 @@ HAL_XPCC::HAL_XPCC() :
         &rcinDriver,
         &rcoutDriver,
         &schedulerInstance,
-        &utilInstance),
-    _member(new EmptyPrivateMember(123))
+        &utilInstance)
 {}
 
 void HAL_XPCC::init(int argc,char* const argv[]) const {
@@ -49,8 +48,7 @@ void HAL_XPCC::init(int argc,char* const argv[]) const {
      * up to the programmer to do this in the correct order.
      * Scheduler should likely come first. */
     scheduler->init(NULL);
-    uartA->begin(115200);
-    _member->init();
+
 }
 
 const HAL_XPCC AP_HAL_XPCC;

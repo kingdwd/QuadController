@@ -136,7 +136,7 @@
 								<option id="gnu.cpp.compiler.option.preprocessor.nostdinc.899032789" name="Do not search system directories (-nostdinc)" superClass="gnu.cpp.compiler.option.preprocessor.nostdinc" useByScannerDiscovery="false" value="false" valueType="boolean"/>
 								<option id="gnu.cpp.compiler.option.preprocessor.def.297191578" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="__ARM_LPC17XX__"/>
-									<listOptionValue builtIn="false" value="CONFIG_HAL_BOARD=HAL_BOARD_EMPTY"/>
+									<listOptionValue builtIn="false" value="CONFIG_HAL_BOARD=HAL_BOARD_XPCC"/>
 									<listOptionValue builtIn="false" value="MAG_BOARD_ORIENTATION=ROTATION_NONE"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.optimization.flags.1359951643" name="Other optimization flags" superClass="gnu.cpp.compiler.option.optimization.flags" useByScannerDiscovery="false" value="-mlong-calls -fsingle-precision-constant  -ffast-math -finline-functions -funroll-loops" valueType="string"/>

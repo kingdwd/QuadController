@@ -11,8 +11,6 @@ class HAL_XPCC : public AP_HAL::HAL {
 public:
     HAL_XPCC();
     void init(int argc, char * const * argv) const;
-private:
-    Empty::EmptyPrivateMember *_member;
 };
 
 extern const HAL_XPCC AP_HAL_XPCC;

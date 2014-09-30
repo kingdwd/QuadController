@@ -164,6 +164,8 @@
 #include "config.h"
 #include "config_channels.h"
 
+#include "prototypes.hpp"
+
 // key aircraft parameters passed to multiple libraries
 static AP_Vehicle::MultiCopter aparm;
 
@@ -267,6 +269,8 @@ static AP_Baro_HIL barometer;
 static AP_Baro_MS5611 barometer(&AP_Baro_MS5611::i2c);
 #elif CONFIG_BARO == HAL_BARO_MS5611_SPI
 static AP_Baro_MS5611 barometer(&AP_Baro_MS5611::spi);
+#elif CONFIG_BARO == HAL_BARO_XPCC
+static AP_Baro_HIL barometer;
 #else
  #error Unrecognized CONFIG_BARO setting
 #endif
@@ -279,6 +283,8 @@ static AP_Compass_VRBRAIN compass;
 #elif CONFIG_COMPASS == HAL_COMPASS_HMC5843
 static AP_Compass_HMC5843 compass;
 #elif CONFIG_COMPASS == HAL_COMPASS_HIL
+static AP_Compass_HIL compass;
+#elif CONFIG_COMPASS == HAL_COMPASS_XPCC
 static AP_Compass_HIL compass;
 #else
  #error Unrecognized CONFIG_COMPASS setting
@@ -304,6 +310,8 @@ AP_InertialSensor_Flymaple ins;
 AP_InertialSensor_L3G4200D ins;
 #elif CONFIG_INS_TYPE == HAL_INS_MPU9250
 AP_InertialSensor_MPU9250 ins;
+#elif CONFIG_INS_TYPE == HAL_INS_XPCC
+AP_InertialSensor_HIL ins;
 #else
   #error Unrecognised CONFIG_INS_TYPE setting.
 #endif // CONFIG_INS_TYPE

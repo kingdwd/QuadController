@@ -3,7 +3,7 @@
 #define __AP_HAL_EMPTY_UARTDRIVER_H__
 
 #include <xpcc/architecture.hpp>
-#include <AP_HAL_Empty.h>
+#include "AP_HAL_XPCC.h"
 
 class Empty::UARTDriver : public AP_HAL::UARTDriver {
 public:

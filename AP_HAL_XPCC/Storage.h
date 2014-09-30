@@ -2,7 +2,7 @@
 #ifndef __AP_HAL_EMPTY_STORAGE_H__
 #define __AP_HAL_EMPTY_STORAGE_H__
 
-#include <AP_HAL_Empty.h>
+#include "AP_HAL_XPCC.h"
 
 class Empty::Storage : public AP_HAL::Storage {
 public:

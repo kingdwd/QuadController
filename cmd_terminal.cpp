@@ -230,7 +230,9 @@ void CmdTerminal::handleCommand(uint8_t nargs, char* argv[]) {
 		while (len) {
 
 			while (len && pos < sizeof(buf)) {
-				while ((buf[pos] = device.read()) == -1);
+				int16_t c;
+				while(!device.rxAvailable());
+				buf[pos] = device.read();
 				pos++;
 				len--;
 			}

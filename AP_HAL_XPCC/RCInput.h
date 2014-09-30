@@ -2,7 +2,7 @@
 #ifndef __AP_HAL_EMPTY_RCINPUT_H__
 #define __AP_HAL_EMPTY_RCINPUT_H__
 
-#include <AP_HAL_Empty.h>
+#include "AP_HAL_XPCC.h"
 #include <xpcc/architecture.hpp>
 
 class Empty::RCInput : public AP_HAL::RCInput {
