@@ -7,7 +7,7 @@
 
 #include "AP_HAL_XPCC.h"
 
-class Empty::EmptyPrivateMember {
+class XpccHAL::EmptyPrivateMember {
 public:
     EmptyPrivateMember(uint16_t foo);
     void init();

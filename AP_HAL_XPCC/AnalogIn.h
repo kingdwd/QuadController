@@ -4,7 +4,7 @@
 
 #include "AP_HAL_XPCC.h"
 
-class Empty::AnalogSource : public AP_HAL::AnalogSource {
+class XpccHAL::AnalogSource : public AP_HAL::AnalogSource {
 public:
     AnalogSource(uint8_t chan);
     float read_average();
@@ -20,7 +20,7 @@ private:
     uint8_t _chan;
 };
 
-class Empty::AnalogIn : public AP_HAL::AnalogIn {
+class XpccHAL::AnalogIn : public AP_HAL::AnalogIn {
 public:
     AnalogIn();
     void init(void* implspecific);

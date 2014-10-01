@@ -1,7 +1,7 @@
 
 #include "GPIO.h"
 
-using namespace Empty;
+using namespace XpccHAL;
 
 #include <xpcc/architecture.hpp>
 #include <AP_HAL.h>

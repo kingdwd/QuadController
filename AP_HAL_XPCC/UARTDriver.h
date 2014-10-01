@@ -5,7 +5,7 @@
 #include <xpcc/architecture.hpp>
 #include "AP_HAL_XPCC.h"
 
-class Empty::UARTDriver : public AP_HAL::UARTDriver {
+class XpccHAL::UARTDriver : public AP_HAL::UARTDriver {
 public:
     UARTDriver(xpcc::IODevice* device);
     /* Empty implementations of UARTDriver virtual methods */

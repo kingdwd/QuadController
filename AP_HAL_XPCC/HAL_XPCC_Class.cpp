@@ -5,7 +5,7 @@
 #include "HAL_XPCC_Class.h"
 #include "AP_HAL_Empty_Private.h"
 
-using namespace Empty;
+using namespace XpccHAL;
 
 extern UARTDriver uartADriver;
 extern UARTDriver uartBDriver;
@@ -47,7 +47,9 @@ void HAL_XPCC::init(int argc,char* const argv[]) const {
     /* initialize all drivers and private members here.
      * up to the programmer to do this in the correct order.
      * Scheduler should likely come first. */
-    scheduler->init(NULL);
+    scheduler->init(0);
+    rcout->init(0);
+
 
 }
 

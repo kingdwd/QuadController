@@ -2,7 +2,7 @@
 #include <AP_HAL.h>
 #include "I2CDriver.h"
 
-using namespace Empty;
+using namespace XpccHAL;
 
 void I2CDriver::begin() {}
 void I2CDriver::end() {}

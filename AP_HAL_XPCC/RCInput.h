@@ -5,7 +5,7 @@
 #include "AP_HAL_XPCC.h"
 #include <xpcc/architecture.hpp>
 
-class Empty::RCInput : public AP_HAL::RCInput {
+class XpccHAL::RCInput : public AP_HAL::RCInput {
 public:
     RCInput();
     void init(void* machtnichts);

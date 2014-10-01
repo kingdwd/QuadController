@@ -1,7 +1,7 @@
 
 #include "SPIDriver.h"
 
-using namespace Empty;
+using namespace XpccHAL;
 
 SPIDeviceDriver::SPIDeviceDriver()
 {}

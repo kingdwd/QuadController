@@ -161,8 +161,8 @@ void CmdTerminal::handleCommand(uint8_t nargs, char* argv[]) {
 	}
 
 	else if (cmp(argv[0], "flash")) {
-
-		LPC_WDT->WDFEED = 0x56;
+		LPC_WDT->WDMOD = 0x03;
+		LPC_WDT->WDFEED = 0xFF;
 	} else if (cmp(argv[0], "compass_stop")) {
 
 		qController.mag.stopCalibration();
@@ -199,13 +199,19 @@ void CmdTerminal::handleCommand(uint8_t nargs, char* argv[]) {
 	}
 	else if (cmp(argv[0], "dump")) {
 		if (crashData[0] == 0xFAFA5555) {
+			printf("------ HARD FAULT------\n");
+			XPCC_LOG_DEBUG.printf("pc  = 0x%08x\n", crashData[1]);
+			XPCC_LOG_DEBUG.printf("lr  = 0x%08x\n", crashData[2]);
 			printf("------\n");
+		} else if (crashData[0] == 0xFAFA4444) {
+			printf("------ WDT TIMEOUT------\n");
 			XPCC_LOG_DEBUG.printf("pc  = 0x%08x\n", crashData[1]);
 			XPCC_LOG_DEBUG.printf("lr  = 0x%08x\n", crashData[2]);
 			printf("------\n");
 		} else {
 			printf("No dump\n");
 		}
+		crashData[0] = 0;
 
 	} else if (cmp(argv[0], "flashboot")) {
 		uint16_t binLen;

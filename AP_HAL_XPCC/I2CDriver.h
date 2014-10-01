@@ -4,7 +4,7 @@
 
 #include "AP_HAL_XPCC.h"
 
-class Empty::I2CDriver : public AP_HAL::I2CDriver {
+class XpccHAL::I2CDriver : public AP_HAL::I2CDriver {
 public:
     I2CDriver(AP_HAL::Semaphore* semaphore) : _semaphore(semaphore) {}
     void begin();

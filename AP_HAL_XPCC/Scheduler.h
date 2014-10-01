@@ -6,7 +6,7 @@
 
 #define MAX_TIMER_PROCS 4
 
-class Empty::Scheduler : public AP_HAL::Scheduler {
+class XpccHAL::Scheduler : public AP_HAL::Scheduler {
 public:
     Scheduler();
     void     init(void* machtnichts);

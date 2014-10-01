@@ -1,7 +1,7 @@
 
 #include "PrivateMember.h"
 
-using namespace Empty;
+using namespace XpccHAL;
 
 EmptyPrivateMember::EmptyPrivateMember(uint16_t foo) :
     _foo(foo)

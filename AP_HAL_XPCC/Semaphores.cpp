@@ -1,7 +1,7 @@
 
 #include "Semaphores.h"
 
-using namespace Empty;
+using namespace XpccHAL;
 
 bool Semaphore::give() {
     if (_taken) {

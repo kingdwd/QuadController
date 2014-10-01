@@ -4,7 +4,7 @@
 
 #include "AP_HAL_XPCC.h"
 
-class Empty::Semaphore : public AP_HAL::Semaphore {
+class XpccHAL::Semaphore : public AP_HAL::Semaphore {
 public:
     Semaphore() : _taken(false) {}
     bool give();

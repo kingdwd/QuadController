@@ -22,45 +22,55 @@ extern const AP_HAL::HAL& hal;// = AP_HAL_XPCC;
 
 //AP_MotorsQuad motors(c, c, c, c, 100);
 
-BufferedUart<Uart0> uart(38400, 128, 128);
+extern void setup();
+extern void loop();
 
-Empty::UARTDriver uartADriver(&uart);
-Empty::UARTDriver uartBDriver(0);
-Empty::UARTDriver uartCDriver(0);
-Empty::UARTDriver uartDDriver(0);
-Empty::UARTDriver uartEDriver(0);
+bool init = 0;
 
+class AP : xpcc::TickerTask {
+	void handleTick() {
+		if(init)
+			loop();
+	}
+};
+
+AP ap;
 void ap_test(char *argv[], int argc) {
 	hal.init(0, 0);
+	setup();
 
-	printf("%d\n", hal.rcin->read(2));
+	init = true;
 
-	Pinsel::setFunc(0, 2, 1);
-	Pinsel::setFunc(0, 3, 1);
+	//hal.init(0, 0);
 
-
-	hal.gpio->write(200, true);
-
-	XPCC_LOG_DEBUG .printf("uart write\n");
-
-	for(int i = 0; i < 256; i++) {
-		hal.uartA->write(i);
-	}
-
-	for(int i = 0; i < 64; i++) {
-		//uart.read();
-	}
-
-	if(strcmp(argv[1], "init")==0){
-		hal.gpio->init();
-		hal.analogin->init(0);
-		hal.rcout->init(0);
-	} else
-		if(strcmp(argv[1], "analog")==0){
-			AP_HAL::AnalogSource *src = hal.analogin->channel(7);
-			if(src)
-				printf("analog read %.5f\n", src->read_latest());
-		}
+//	printf("%d\n", hal.rcin->read(2));
+//
+//	Pinsel::setFunc(0, 2, 1);
+//	Pinsel::setFunc(0, 3, 1);
+//
+//
+//	hal.gpio->write(200, true);
+//
+//	XPCC_LOG_DEBUG .printf("uart write\n");
+//
+//	for(int i = 0; i < 256; i++) {
+//		hal.uartA->write(i);
+//	}
+//
+//	for(int i = 0; i < 64; i++) {
+//		//uart.read();
+//	}
+//
+//	if(strcmp(argv[1], "init")==0){
+//		hal.gpio->init();
+//		hal.analogin->init(0);
+//		hal.rcout->init(0);
+//	} else
+//		if(strcmp(argv[1], "analog")==0){
+//			AP_HAL::AnalogSource *src = hal.analogin->channel(7);
+//			if(src)
+//				printf("analog read %.5f\n", src->read_latest());
+//		}
 
 
 //	hal.rcout->enable_ch(0);

@@ -4,7 +4,7 @@
 
 #include "AP_HAL_XPCC.h"
 
-class Empty::RCOutput : public AP_HAL::RCOutput {
+class XpccHAL::RCOutput : public AP_HAL::RCOutput {
     void     init(void* machtnichts);
     void     set_freq(uint32_t chmask, uint16_t freq_hz);
     uint16_t get_freq(uint8_t ch);

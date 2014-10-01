@@ -7,7 +7,7 @@
  * C++ namespace rules.)
  */
 
-namespace Empty {
+namespace XpccHAL {
     class UARTDriver;
     class I2CDriver;
     class SPIDeviceManager;

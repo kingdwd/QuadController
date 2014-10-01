@@ -3,7 +3,7 @@
 #include <stdio.h>
 
 using namespace xpcc::lpc17;
-using namespace Empty;
+using namespace XpccHAL;
 
 const uint8_t chMap[] = {3, 4, 5, 6};
 

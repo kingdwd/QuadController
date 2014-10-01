@@ -4,7 +4,7 @@
 
 #define NUM_CHANNELS 6
 
-using namespace Empty;
+using namespace XpccHAL;
 RCInput::RCInput()
 {}
 

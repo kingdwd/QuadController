@@ -34,9 +34,28 @@ extern "C" void BusFault_Handler(void)
 		       "B Hard_Fault_Handler");
 }
 
-
 uint32_t crashData[3] __attribute__((section(".noinit")));
 
+extern "C" void WDT_Handler(uint32_t stack[]) {
+	crashData[0] = 0xFAFA4444;
+	crashData[1] = stack[pc];
+	crashData[2] = stack[lr];
+
+	LPC_WDT->WDMOD = 0x3;
+	LPC_WDT->WDFEED = 0xFF;
+
+
+	while(1) {
+		ledRed::set();
+		ledGreen::set();
+	}
+}
+
+extern "C" void WDT_IRQHandler(void)
+{
+  asm volatile("MRS r0, MSP;"
+		       "B WDT_Handler");
+}
 
 
 extern "C"
@@ -58,6 +77,9 @@ void Hard_Fault_Handler(uint32_t stack[]) {
 //	XPCC_LOG_DEBUG .printf("lr  = 0x%08x\n", stack[lr]);
 //	XPCC_LOG_DEBUG .printf("pc  = 0x%08x\n", stack[pc]);
 //	XPCC_LOG_DEBUG .printf("psr = 0x%08x\n", stack[psr]);
+
+	LPC_WDT->WDMOD = 0x3;
+	LPC_WDT->WDFEED = 0xFF;
 
 	while(1) {
 		ledRed::set();

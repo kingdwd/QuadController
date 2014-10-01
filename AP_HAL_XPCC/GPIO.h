@@ -6,7 +6,7 @@
 
 #define GPIO_PIN(port, pin) ((pin<<3)|port)
 
-class Empty::GPIO : public AP_HAL::GPIO {
+class XpccHAL::GPIO : public AP_HAL::GPIO {
 public:
     GPIO();
     void    init();
@@ -27,7 +27,7 @@ public:
     bool    usb_connected(void);
 };
 
-class Empty::DigitalSource : public AP_HAL::DigitalSource {
+class XpccHAL::DigitalSource : public AP_HAL::DigitalSource {
 public:
     DigitalSource(uint8_t v);
     void    mode(uint8_t output);

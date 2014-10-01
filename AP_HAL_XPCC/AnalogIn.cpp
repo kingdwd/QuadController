@@ -3,7 +3,7 @@
 #include <stdio.h>
 
 
-using namespace Empty;
+using namespace XpccHAL;
 using namespace xpcc::lpc17;
 
 const uint8_t analogFunc[] = {0, 0, 1, 1, 0, 3, 2, 2};
@@ -73,6 +73,8 @@ AP_HAL::AnalogSource* AnalogIn::channel(int16_t n) {
 	int8_t pin = hal.gpio->analogPinToDigitalPin(n);
 	if(pin >= 0) {
 		channels[n] = new AnalogSource(n);
+	} else {
+		return 0;
 	}
 
 	return channels[n];

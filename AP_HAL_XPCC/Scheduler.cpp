@@ -2,7 +2,7 @@
 #include "Scheduler.h"
 
 
-using namespace Empty;
+using namespace XpccHAL;
 
 extern const AP_HAL::HAL& hal;
 

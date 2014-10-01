@@ -1,10 +1,10 @@
 
 #include "UARTDriver.h"
 
-using namespace Empty;
+using namespace XpccHAL;
 
 UARTDriver::UARTDriver(xpcc::IODevice* device) :
-	_device(device), _blocking_writes(0)
+	_device(device), _blocking_writes(1)
 {
 
 }
@@ -52,7 +52,8 @@ int16_t UARTDriver::read() {
 size_t UARTDriver::write(uint8_t c) {
 	if(!_device)
 		return 0;
-	if(_blocking_writes) {
+
+	if(_blocking_writes || txspace() < 0) {
 		return _device->write(c);
 	} else {
 		if(_device->txAvailable() > 0) {
@@ -65,9 +66,23 @@ size_t UARTDriver::write(uint8_t c) {
 
 size_t UARTDriver::write(const uint8_t *buffer, size_t size)
 {
+    size_t x = 0;
     size_t n = 0;
-    while (size--) {
-        n += write(*buffer++);
+    //XPCC_LOG_DEBUG .printf("write buf %d\n", size);
+
+	if(_blocking_writes) {
+		while (size--) {
+			x = _device->write(*buffer++);
+			if(!x) return n;
+			n++;
+		}
+		return n;
+    } else {
+    	while (size--) {
+    		x = write(*buffer++);
+    		if(!x) return n;
+    		n++;
+    	}
+    	return n;
     }
-    return n;
 }
