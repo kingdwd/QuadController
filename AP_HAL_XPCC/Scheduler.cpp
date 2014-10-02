@@ -28,10 +28,22 @@ void Scheduler::init(void* machtnichts)
 
 void Scheduler::delay(uint16_t ms)
 {
-	xpcc::Timeout<> t(ms);
-	while(!t.isExpired()) {
-		xpcc::TickerTask::yield();
-	}
+
+	uint32_t start = micros();
+
+    while (ms > 0) {
+        while ((micros() - start) >= 1000) {
+            ms--;
+            xpcc::TickerTask::yield();
+            if (ms == 0) break;
+            start += 1000;
+        }
+        if (_min_delay_cb_ms <= ms) {
+            if (_delay_proc) {
+            	_delay_proc();
+            }
+        }
+    }
 }
 
 void Scheduler::_timer_procs_timer_event()

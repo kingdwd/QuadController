@@ -27,12 +27,9 @@ void RCOutput::init(void* machtnichts) {
 }
 
 void RCOutput::set_freq(uint32_t chmask, uint16_t freq_hz) {
-	printf("%s(%d)\n", __PRETTY_FUNCTION__, freq_hz);
 	prescale = SystemCoreClock / TIMER_PRESCALE / freq_hz;
 
 	PWM::matchUpdate(0, prescale);
-
-	//write(0, _channels, 8);
 }
 
 uint16_t RCOutput::get_freq(uint8_t ch) {

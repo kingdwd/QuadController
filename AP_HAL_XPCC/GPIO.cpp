@@ -76,7 +76,6 @@ AP_HAL::DigitalSource* GPIO::channel(uint16_t n) {
 bool GPIO::attach_interrupt(uint8_t interrupt_num, AP_HAL::Proc p,
         uint8_t mode) {
 
-	XPCC_LOG_DEBUG .printf("Attach interrupt %d\n", interrupt_num);
 	uint8_t port = interrupt_num >> 5;
 	uint8_t pin = (interrupt_num & 0x1F);
 

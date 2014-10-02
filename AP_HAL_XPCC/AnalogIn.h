@@ -25,7 +25,9 @@ public:
     AnalogIn();
     void init(void* implspecific);
     AP_HAL::AnalogSource* channel(int16_t n);
-    float board_voltage(void);
+    float board_voltage(void) {
+    	return 3.3f;
+    }
 
 private:
     AP_HAL::AnalogSource* channels[16];

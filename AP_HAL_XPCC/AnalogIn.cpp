@@ -81,8 +81,3 @@ AP_HAL::AnalogSource* AnalogIn::channel(int16_t n) {
 	hal.console->println("Out of analog channels");
 	return 0;
 }
-
-float AnalogIn::board_voltage(void)
-{
-    return 3.3f;
-}
