@@ -9,6 +9,7 @@
 #define RADIO_HPP_
 
 #include <xpcc/architecture.hpp>
+#include "pindefs.hpp"
 #include <RH_RF22.h>
 
 using namespace xpcc;
@@ -50,7 +51,7 @@ struct RCPacket : Packet {
 
 class Radio : TickerTask, public RH_RF22 {
 public:
-	Radio() : RH_RF22(0, 1) {
+	Radio() : RH_RF22(radio_sel::Pin | (radio_sel::Port<<5), radio_irq::Pin|(radio_irq::Port<<5)) {
 		dataPos = 0;
 		dataLen = 0;
 		seq = 0;

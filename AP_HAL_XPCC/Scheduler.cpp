@@ -19,6 +19,11 @@ Scheduler::Scheduler()
 void Scheduler::init(void* machtnichts)
 {
 	xpcc::lpc17::SysTickTimer::attachInterrupt(Scheduler::_timer_procs_timer_event);
+
+	xpcc::lpc17::Timer0::enableTimer(SystemCoreClock / 1000000);
+
+	xpcc::lpc17::Timer0::enable();
+
 }
 
 void Scheduler::delay(uint16_t ms)
@@ -46,7 +51,7 @@ uint32_t Scheduler::millis() {
 }
 
 uint32_t Scheduler::micros() {
-    return xpcc::lpc17::RitClock::now().getTime() / (SystemCoreClock/1000);
+    return xpcc::lpc17::Timer0::getCounterValue();
 }
 
 void Scheduler::delay_microseconds(uint16_t us)
@@ -64,7 +69,8 @@ void Scheduler::register_delay_callback(AP_HAL::Proc k,
 
 void Scheduler::register_timer_process(AP_HAL::MemberProc proc)
 {
-    for (int i = 0; i < _num_timer_procs; i++) {
+    XPCC_LOG_DEBUG .printf("Register timer proc %x\n", &proc);
+	for (int i = 0; i < _num_timer_procs; i++) {
         if (_timer_proc[i] == proc) {
             return;
         }

@@ -33,6 +33,10 @@ void Radio::handleInit() {
 }
 static ProfileTimer pf;
 void Radio::handleTick() {
+	if(!radio_irq::read()) {
+		isr0();
+	}
+
 	if(!transmitting()) {
 		if(available()) {
 			uint8_t buf[255];
@@ -210,5 +214,5 @@ uint8_t Radio::spiBurstRead0(uint8_t reg, uint8_t* dest, uint8_t len) {
 }
 
 void Radio::handleTxComplete() {
-	setModeRx();
+	//setModeRx();
 }

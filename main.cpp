@@ -46,7 +46,7 @@ USBSerial device(0xffff, 0xf3c4);
 xpcc::IOStream stream(device);
 xpcc::NullIODevice null;
 
-BufferedUart<Uart0> uart0(115200, 128, 128);
+BufferedUart<Uart0> uart0(115200, 256, 128);
 
 XpccHAL::UARTDriver uartADriver(&uart0);
 XpccHAL::UARTDriver uartBDriver(0);
@@ -279,12 +279,12 @@ CmdTerminal terminal(device);
 
 //QuadWireless radio;
 
-GPIO__OUTPUT(test, 0, 16);
+GPIO__OUTPUT(test, 1, 18);
 
 void idle() {
-	test::reset();
-	__WFI();
-	test::set();
+	//test::toggle();
+	//__WFI();
+	//test::set();
 	static PeriodicTimer<> t(500);
 
 	if(t.isExpired()) {
@@ -304,7 +304,8 @@ void wd_init() {
 }
 
 void panic(const char* msg) {
-
+	printf("PANIC: %s\n", msg);
+	while(1);
 }
 
 int main() {
@@ -353,8 +354,6 @@ int main() {
 
 	NVIC_SetPriority(USB_IRQn, 10);
 	NVIC_SetPriority(EINT3_IRQn, 0);
-	NVIC_SetPriority(SysTick_IRQn, 0);
-
 
 	TickerTask::tasksRun(idle);
 }

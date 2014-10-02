@@ -23,6 +23,14 @@ void CmdTerminal::handleCommand(uint8_t nargs, char* argv[]) {
 		ap_test(argv, nargs);
 	}
 
+	if (cmp(argv[0], "e0")) {
+		NVIC_DisableIRQ(EINT3_IRQn);
+	}
+
+	if (cmp(argv[0], "e1")) {
+		NVIC_EnableIRQ(EINT3_IRQn);
+	}
+
 	else if (cmp(argv[0], "hpid")) {
 		float kp = 0;
 		float kd = 0;

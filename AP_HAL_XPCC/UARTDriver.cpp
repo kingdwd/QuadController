@@ -53,8 +53,9 @@ size_t UARTDriver::write(uint8_t c) {
 	if(!_device)
 		return 0;
 
-	if(_blocking_writes || txspace() < 0) {
-		return _device->write(c);
+	if(_blocking_writes || _device->txAvailable() < 0) {
+		while(!_device->write(c));
+		return 1;
 	} else {
 		if(_device->txAvailable() > 0) {
 			_device->write(c);
@@ -68,20 +69,20 @@ size_t UARTDriver::write(const uint8_t *buffer, size_t size)
 {
     size_t x = 0;
     size_t n = 0;
-    //XPCC_LOG_DEBUG .printf("write buf %d\n", size);
 
-	if(_blocking_writes) {
+	if(_blocking_writes || _device->txAvailable() < 0) {
 		while (size--) {
-			x = _device->write(*buffer++);
-			if(!x) return n;
+			uint8_t c = *buffer++;
+			while(!_device->write(c));
 			n++;
 		}
 		return n;
     } else {
-    	while (size--) {
-    		x = write(*buffer++);
-    		if(!x) return n;
-    		n++;
+    	int16_t avail = _device->txAvailable();
+
+    	while (avail && size--) {
+    		n += write(*buffer++);
+    		avail--;
     	}
     	return n;
     }

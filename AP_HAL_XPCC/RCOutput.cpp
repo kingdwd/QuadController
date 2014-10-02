@@ -27,9 +27,12 @@ void RCOutput::init(void* machtnichts) {
 }
 
 void RCOutput::set_freq(uint32_t chmask, uint16_t freq_hz) {
+	printf("%s(%d)\n", __PRETTY_FUNCTION__, freq_hz);
 	prescale = SystemCoreClock / TIMER_PRESCALE / freq_hz;
 
 	PWM::matchUpdate(0, prescale);
+
+	//write(0, _channels, 8);
 }
 
 uint16_t RCOutput::get_freq(uint8_t ch) {
@@ -49,26 +52,31 @@ void RCOutput::disable_ch(uint8_t ch)
 
 void RCOutput::write(uint8_t ch, uint16_t period_us)
 {
-	PWM::matchUpdate(chMap[ch], (prescale*1000) / (10000000/period_us), PWM::UpdateType::PWM_MATCH_UPDATE_NEXT_RST);
+	_channels[ch] = period_us;
+	PWM::matchUpdate(chMap[ch], SystemCoreClock / 10 / (1000000 / period_us), PWM::UpdateType::PWM_MATCH_UPDATE_NEXT_RST);
 }
 
 void RCOutput::write(uint8_t ch, uint16_t* period_us, uint8_t len)
 {
+	for(int i = ch; i < len; i++) {
+		_channels[i] = period_us[i];
+	}
+
 	auto m = PWM::multiMatchUpdate();
-	for(int i = 0; i < len; i++) {
-		m.set(chMap[ch], (prescale*100) / (1000000/period_us[i]));
+	for(int i = ch; i < std::min(len, (uint8_t)4); i++) {
+		m.set(chMap[i], SystemCoreClock / 10 / (1000000 / period_us[i]));
 	}
 	m.commit(PWM::UpdateType::PWM_MATCH_UPDATE_NEXT_RST);
 }
 
 uint16_t RCOutput::read(uint8_t ch) {
-    return PWM::readMatchRegister(chMap[ch])*(TIMER_PRESCALE*1000) / prescale;
+    return _channels[ch];
 }
 
 void RCOutput::read(uint16_t* period_us, uint8_t len)
 {
 	for(int i = 0; i < len; i++) {
-		period_us[i] = read(i);
+		period_us[i] = _channels[i];
 	}
 }
 

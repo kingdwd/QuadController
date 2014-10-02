@@ -21,8 +21,8 @@ void GPIO::init()
 
 void GPIO::pinMode(uint8_t pin, uint8_t output)
 {
-	uint8_t port = pin & 0x07;
-	uint8_t p = pin >> 3;
+	uint8_t port = pin >>5;
+	uint8_t p = pin & 0x1F;
 
 	if(port <= 3) {
 		if(output) {
@@ -46,17 +46,16 @@ int8_t GPIO::analogPinToDigitalPin(uint8_t pin)
 
 
 uint8_t GPIO::read(uint8_t pin) {
-	uint8_t port = pin & 0x03;
-	uint8_t p = (pin >> 3) ;
+	uint8_t port = pin >>5;
+	uint8_t p = pin & 0x1F;
 
 	return ports[port]->FIOPIN & (1<<p);
 }
 
 void GPIO::write(uint8_t pin, uint8_t value)
 {
-	uint8_t port = pin & 0x03;
-	uint8_t p = (pin >> 3) ;
-
+	uint8_t port = pin >>5;
+	uint8_t p = pin & 0x1F;
 	if(value)
 		ports[port]->FIOSET = (1<<p);
 	else
@@ -77,8 +76,9 @@ AP_HAL::DigitalSource* GPIO::channel(uint16_t n) {
 bool GPIO::attach_interrupt(uint8_t interrupt_num, AP_HAL::Proc p,
         uint8_t mode) {
 
-	uint8_t port = interrupt_num & 0x03;
-	uint8_t pin = (interrupt_num >> 3);
+	XPCC_LOG_DEBUG .printf("Attach interrupt %d\n", interrupt_num);
+	uint8_t port = interrupt_num >> 5;
+	uint8_t pin = (interrupt_num & 0x1F);
 
 	xpcc::IntEdge m;
     if (mode == HAL_GPIO_INTERRUPT_FALLING)

@@ -29,8 +29,11 @@ bool init = 0;
 
 class AP : xpcc::TickerTask {
 	void handleTick() {
-		if(init)
+		if(init) {
+			LPC_GPIO1->FIOSET = 1<<18;
 			loop();
+			LPC_GPIO1->FIOCLR = 1<<18;
+		}
 	}
 };
 

@@ -310,6 +310,7 @@ static void NOINLINE send_simstate(mavlink_channel_t chan)
 
 static void NOINLINE send_hwstatus(mavlink_channel_t chan)
 {
+	return;
     mavlink_msg_hwstatus_send(
         chan,
         hal.analogin->board_voltage()*1000,

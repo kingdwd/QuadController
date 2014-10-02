@@ -6,7 +6,7 @@
 
 class XpccHAL::AnalogSource : public AP_HAL::AnalogSource {
 public:
-    AnalogSource(uint8_t chan);
+    AnalogSource(int16_t chan);
     float read_average();
     float read_latest();
     void set_pin(uint8_t p);
@@ -28,6 +28,6 @@ public:
     float board_voltage(void);
 
 private:
-    AP_HAL::AnalogSource* channels[8];
+    AP_HAL::AnalogSource* channels[16];
 };
 #endif // __AP_HAL_EMPTY_ANALOGIN_H__
