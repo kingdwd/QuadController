@@ -24,6 +24,7 @@ void Scheduler::init(void* machtnichts)
 
 	xpcc::lpc17::Timer0::enable();
 
+	_timer_proc_enabled = true;
 }
 
 void Scheduler::delay(uint16_t ms)

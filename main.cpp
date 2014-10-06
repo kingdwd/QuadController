@@ -22,10 +22,8 @@
 
 #include <math.h>
 
-#include "SensorProcessor.hpp"
-
 #include "eeprom/eeprom.hpp"
-#include "QuadController.hpp"
+
 
 #include <RH_RF22.h>
 #include "mavlink.hpp"
@@ -46,7 +44,7 @@ USBSerial device(0xffff, 0xf3c4);
 xpcc::IOStream stream(device);
 xpcc::NullIODevice null;
 
-BufferedUart<Uart0> uart0(115200, 256, 128);
+BufferedUart<Uart0> uart0(230400, 512, 128);
 
 XpccHAL::UARTDriver uartADriver(&uart0);
 XpccHAL::UARTDriver uartBDriver(0);
@@ -77,7 +75,7 @@ xpcc::log::Logger xpcc::log::error(null);
 Mavlink mavlink;
 Radio radio;
 
-QuadController qController;
+//QuadController qController;
 
 
 

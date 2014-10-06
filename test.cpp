@@ -46,11 +46,28 @@ class AP : xpcc::TickerTask {
 
 AP ap;
 void ap_test(char *argv[], int argc) {
-	hal.init(0, 0);
-	setup();
+	if(strcmp(argv[1], "init") == 0) {
+		hal.init(0, 0);
+		setup();
 
-	init = true;
+		init = true;
+	}
 
+	if(strcmp(argv[1], "i2ctest") == 0) {
+
+		AP_HAL::Semaphore *sem = hal.i2c->get_semaphore();
+
+		if(!sem->take_nonblocking()) {
+			printf("cannot take sem\n");
+		}
+
+		uint8_t reg= 0;
+		bool res = hal.i2c->readRegister(0x68, 0x75, &reg);
+
+		printf("%d whoami: %x\n", res, reg);
+
+		sem->give();
+	}
 
 
 

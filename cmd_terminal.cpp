@@ -14,9 +14,9 @@
 extern uint32_t crashData[3];
 
 void CmdTerminal::handleCommand(uint8_t nargs, char* argv[]) {
-	if (cmp(argv[0], "quad")) {
-		qController.handleCommand(*this, nargs, argv);
-	}
+//	if (cmp(argv[0], "quad")) {
+//		qController.handleCommand(*this, nargs, argv);
+//	}
 
 	if (cmp(argv[0], "ap_test")) {
 		extern void ap_test(char *a[], int argc);
@@ -45,7 +45,7 @@ void CmdTerminal::handleCommand(uint8_t nargs, char* argv[]) {
 		ios.printf("Height PID Kp=%.3f Ki=%.3f Kd=%.3f max=%.3f\n", kp, ki, kd,
 				max);
 
-		qController.setHeightPID(kp, ki, kd, max, true);
+		//qController.setHeightPID(kp, ki, kd, max, true);
 
 	} else if (cmp(argv[0], "erase")) {
 		ios.printf("Erasing eeprom\n");
@@ -110,14 +110,14 @@ void CmdTerminal::handleCommand(uint8_t nargs, char* argv[]) {
 
 	else if (cmp(argv[0], "throttle")) {
 		float t = toInt(argv[1]) / 100.0;
-		qController.throttle = t;
+		//qController.throttle = t;
 	}
 
 	else if (cmp(argv[0], "arm")) {
 		if (cmp(argv[1], "true")) {
-			qController.arm(true);
+			//qController.arm(true);
 		} else {
-			qController.arm(false);
+			//qController.arm(false);
 		}
 	}
 
@@ -130,12 +130,12 @@ void CmdTerminal::handleCommand(uint8_t nargs, char* argv[]) {
 
 		ios.printf("Motor speed (%.2f,%.2f,%.2f,%.2f)\n", spd[0], spd[1],
 				spd[2], spd[3]);
-		qController.setMotorOutput(spd);
+		//qController.setMotorOutput(spd);
 	}
 
 	else if (cmp(argv[0], "zero")) {
 		ios.printf("Zeroing sensors\n");
-		qController.zero();
+		//qController.zero();
 	}
 
 	//		else if(cmp(argv[0], "baro")) {
@@ -173,10 +173,10 @@ void CmdTerminal::handleCommand(uint8_t nargs, char* argv[]) {
 		LPC_WDT->WDFEED = 0xFF;
 	} else if (cmp(argv[0], "compass_stop")) {
 
-		qController.mag.stopCalibration();
+		//qController.mag.stopCalibration();
 	} else if (cmp(argv[0], "compass_start")) {
 
-		qController.mag.startCalibration();
+		//qController.mag.startCalibration();
 	}
 
 	else if (cmp(argv[0], "sendPacket")) {

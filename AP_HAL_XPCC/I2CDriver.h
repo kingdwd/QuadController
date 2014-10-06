@@ -3,6 +3,9 @@
 #define __AP_HAL_EMPTY_I2CDRIVER_H__
 
 #include "AP_HAL_XPCC.h"
+#include <xpcc/architecture.hpp>
+#include <xpcc/architecture/peripheral/i2c_adapter.hpp>
+
 
 class XpccHAL::I2CDriver : public AP_HAL::I2CDriver {
 public:
@@ -36,6 +39,7 @@ public:
 
 private:
     AP_HAL::Semaphore* _semaphore;
+    xpcc::I2cWriteReadAdapter adapter;
 };
 
 #endif // __AP_HAL_EMPTY_I2CDRIVER_H__

@@ -22,7 +22,6 @@ public:
 	xpcc::IOStream ios;
 protected:
 
-
 	void handleCommand(uint8_t nargs, char* argv[]);
 
 };
