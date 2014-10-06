@@ -53,6 +53,7 @@ XpccHAL::UARTDriver uartBDriver(0);
 XpccHAL::UARTDriver uartCDriver(0);
 XpccHAL::UARTDriver uartDDriver(0);
 XpccHAL::UARTDriver uartEDriver(0);
+XpccHAL::UARTDriver uartConsoleDriver(&device);
 
 #ifdef _DEBUG
 xpcc::log::Logger xpcc::log::info(device);
@@ -281,10 +282,16 @@ CmdTerminal terminal(device);
 
 GPIO__OUTPUT(test, 1, 18);
 
+#include "AP_HAL_XPCC/Semaphores.h"
+
+XpccHAL::Semaphore sem;
+
+
 void idle() {
 	//test::toggle();
 	//__WFI();
 	//test::set();
+
 	static PeriodicTimer<> t(500);
 
 	if(t.isExpired()) {

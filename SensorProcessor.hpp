@@ -407,7 +407,7 @@ public:
 		    	vAcc.z = accel[2]/16384.0f;
 
 		    	//XPCC_LOG_DEBUG << dt << " " << qRotation << endl;
-		    	//XPCC_LOG_DEBUG << vGyro << vAcc << endl;
+		    	//XPCC_LOG_DEBUG << vGyro * (180.0/M_PI) << vAcc << endl;
 
 		    	//static float headingCompensation;
 		    	//Quaternion<float> tmp(Vector3f(0, 0, 1), headingCompensation);

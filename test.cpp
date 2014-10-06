@@ -25,13 +25,20 @@ extern const AP_HAL::HAL& hal;// = AP_HAL_XPCC;
 extern void setup();
 extern void loop();
 
+
+void tm() {
+
+}
+
 bool init = 0;
 
 class AP : xpcc::TickerTask {
 	void handleTick() {
 		if(init) {
-			LPC_GPIO1->FIOSET = 1<<18;
+
 			loop();
+			LPC_GPIO1->FIOSET = 1<<18;
+
 			LPC_GPIO1->FIOCLR = 1<<18;
 		}
 	}
@@ -43,6 +50,10 @@ void ap_test(char *argv[], int argc) {
 	setup();
 
 	init = true;
+
+
+
+
 
 	//hal.init(0, 0);
 

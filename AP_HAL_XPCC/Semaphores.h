@@ -11,7 +11,10 @@ public:
     bool take(uint32_t timeout_ms);
     bool take_nonblocking();
 private:
-    bool _taken;
+
+    volatile bool _taken;
+    bool _take_from_mainloop(uint32_t timeout_ms);
+    bool _take_nonblocking();
 };
 
 #endif // __AP_HAL_EMPTY_SEMAPHORE_H__

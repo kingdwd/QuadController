@@ -12,17 +12,18 @@ extern UARTDriver uartBDriver;
 extern UARTDriver uartCDriver;
 extern UARTDriver uartDDriver;
 extern UARTDriver uartEDriver;
+extern UARTDriver uartConsoleDriver;
 
-static Semaphore  i2cSemaphore;
-static I2CDriver  i2cDriver(&i2cSemaphore);
-static SPIDeviceManager spiDeviceManager;
-static AnalogIn analogIn;
-static Storage storageDriver;
-static GPIO gpioDriver;
-static RCInput rcinDriver;
-static RCOutput rcoutDriver;
-static Scheduler schedulerInstance;
-static Util utilInstance;
+Semaphore  i2cSemaphore;
+I2CDriver  i2cDriver(&i2cSemaphore);
+SPIDeviceManager spiDeviceManager;
+AnalogIn analogIn;
+Storage storageDriver;
+GPIO gpioDriver;
+RCInput rcinDriver;
+RCOutput rcoutDriver;
+Scheduler schedulerInstance;
+Util utilInstance;
 
 HAL_XPCC::HAL_XPCC() :
     AP_HAL::HAL(
@@ -35,7 +36,7 @@ HAL_XPCC::HAL_XPCC() :
         &spiDeviceManager,
         &analogIn,
         &storageDriver,
-        &uartADriver,
+        &uartConsoleDriver,
         &gpioDriver,
         &rcinDriver,
         &rcoutDriver,
