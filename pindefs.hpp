@@ -13,7 +13,7 @@
 
 //GPIO__INPUT(progPin, 2, 0);
 
-GPIO__OUTPUT(usbConnPin, 1, 30);
+GPIO__OUTPUT(usbConnPin, 1, 18);
 
 GPIO__OUTPUT(ledRed, 0, 25);
 GPIO__OUTPUT(ledGreen, 0, 26);

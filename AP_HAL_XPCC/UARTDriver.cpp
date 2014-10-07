@@ -3,6 +3,9 @@
 
 using namespace XpccHAL;
 
+#include <stdio.h>
+extern const AP_HAL::HAL& hal;
+
 UARTDriver::UARTDriver(xpcc::IODevice* device) :
 	_device(device), _blocking_writes(1)
 {
@@ -58,8 +61,7 @@ size_t UARTDriver::write(uint8_t c) {
 		return 1;
 	} else {
 		if(_device->txAvailable() > 0) {
-			_device->write(c);
-			return 1;
+			return _device->write(c);
 		}
 	}
 	return 0;
@@ -69,6 +71,8 @@ size_t UARTDriver::write(const uint8_t *buffer, size_t size)
 {
     size_t x = 0;
     size_t n = 0;
+    if(!_device)
+    	return 0;
 
 	if(_blocking_writes || _device->txAvailable() < 0) {
 		while (size--) {
@@ -78,12 +82,6 @@ size_t UARTDriver::write(const uint8_t *buffer, size_t size)
 		}
 		return n;
     } else {
-    	int16_t avail = _device->txAvailable();
-
-    	while (avail && size--) {
-    		n += write(*buffer++);
-    		avail--;
-    	}
-    	return n;
+    	return _device->write(buffer, size);
     }
 }

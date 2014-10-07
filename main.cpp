@@ -44,7 +44,7 @@ USBSerial device(0xffff, 0xf3c4);
 xpcc::IOStream stream(device);
 xpcc::NullIODevice null;
 
-BufferedUart<Uart0> uart0(115200, 512, 128);
+BufferedUart<Uart0> uart0(115200, 1024, 128);
 
 XpccHAL::UARTDriver uartADriver(&uart0);
 XpccHAL::UARTDriver uartBDriver(0);
@@ -278,13 +278,6 @@ CmdTerminal terminal(device);
 
 //QuadWireless radio;
 
-GPIO__OUTPUT(test, 1, 18);
-
-#include "AP_HAL_XPCC/Semaphores.h"
-
-XpccHAL::Semaphore sem;
-
-
 void idle() {
 	//test::toggle();
 	//__WFI();
@@ -316,7 +309,6 @@ void panic(const char* msg) {
 int main() {
 	wd_init();
 
-	test::setOutput(false);
 	//debugIrq = true;
 	ledRed::setOutput(true);
 	ledGreen::setOutput(true);

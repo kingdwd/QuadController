@@ -36,10 +36,10 @@ class AP : xpcc::TickerTask {
 };
 
 void dbgset() {
-	LPC_GPIO1->FIOSET = 1<<18;
+	//LPC_GPIO1->FIOSET = 1<<18;
 }
 void dbgclr() {
-	LPC_GPIO1->FIOCLR = 1<<18;
+	//LPC_GPIO1->FIOCLR = 1<<18;
 }
 
 AP ap;
@@ -51,7 +51,18 @@ void ap_test(char *argv[], int argc) {
 		init = true;
 	}
 
+	if(strcmp(argv[1], "uart") == 0) {
 
+		static uint32_t buffer[512];
+		for(int i = 0; i < 512; i++) {
+			buffer[i] = i;
+		}
+
+		uint8_t* b = (uint8_t*)buffer;
+		hal.uartA->set_blocking_writes(false);
+		hal.uartA->write(b, 1000);
+
+	}
 	//hal.init(0, 0);
 
 //	printf("%d\n", hal.rcin->read(2));
