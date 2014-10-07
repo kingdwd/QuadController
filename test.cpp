@@ -25,24 +25,22 @@ extern const AP_HAL::HAL& hal;// = AP_HAL_XPCC;
 extern void setup();
 extern void loop();
 
-
-void tm() {
-
-}
-
 bool init = 0;
 
 class AP : xpcc::TickerTask {
 	void handleTick() {
 		if(init) {
-
 			loop();
-			LPC_GPIO1->FIOSET = 1<<18;
-
-			LPC_GPIO1->FIOCLR = 1<<18;
 		}
 	}
 };
+
+void dbgset() {
+	LPC_GPIO1->FIOSET = 1<<18;
+}
+void dbgclr() {
+	LPC_GPIO1->FIOCLR = 1<<18;
+}
 
 AP ap;
 void ap_test(char *argv[], int argc) {
@@ -52,24 +50,6 @@ void ap_test(char *argv[], int argc) {
 
 		init = true;
 	}
-
-	if(strcmp(argv[1], "i2ctest") == 0) {
-
-		AP_HAL::Semaphore *sem = hal.i2c->get_semaphore();
-
-		if(!sem->take_nonblocking()) {
-			printf("cannot take sem\n");
-		}
-
-		uint8_t reg= 0;
-		bool res = hal.i2c->readRegister(0x68, 0x75, &reg);
-
-		printf("%d whoami: %x\n", res, reg);
-
-		sem->give();
-	}
-
-
 
 
 	//hal.init(0, 0);
