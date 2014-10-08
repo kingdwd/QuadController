@@ -12,6 +12,7 @@
 #include "cmd_terminal.hpp"
 #include "pindefs.hpp"
 #include <RH_RF22.h>
+#include <AP_Param.h>
 
 using namespace xpcc;
 
@@ -59,6 +60,8 @@ public:
 		dataSent = 0;
 		//lastAckSeq = 0;
 		numRetries = 0;
+
+		AP_Param::setup_object_defaults(this, var_info);
 	}
 
 	void handleInit();
@@ -81,20 +84,40 @@ public:
     	return _txGood;
     }
 
+    void setFrequency(float f, float afc = 0.05f) {
+    	freq.set_and_save_ifchanged(f);
+
+    	RH_RF22::setFrequency(f, afc);
+    }
+
+    void setTxPower(uint8_t pow) {
+    	txPow.set_and_save_ifchanged(pow);
+
+    	RH_RF22::setTxPower(pow);
+    }
+
+    void setModemConfig(RH_RF22::ModemConfigChoice cfg) {
+    	modemCfg.set_and_save_ifchanged(cfg);
+
+    	RH_RF22::setModemConfig(cfg);
+    }
+
     RCPacket rcData;
     Timestamp rcPacketTimestamp;
 
     friend class CmdTerminal;
 
+    static const struct AP_Param::GroupInfo var_info[];
+
 protected:
 	void handleTxComplete();
 
-	float freq;
-	float afc;
-	uint8_t txPow;
-	RH_RF22::ModemConfigChoice modemCfg;
+	AP_Float freq;
+	AP_Int8 txPow;
 
-	uint8_t fhChannels;
+	AP_Int8 modemCfg;
+	AP_Int8 fhChannels;
+
 	uint8_t maxFragment = 64;
 
 	uint8_t packetBuf[255];

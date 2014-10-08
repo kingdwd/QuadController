@@ -9,25 +9,28 @@
 #include "eeprom/eeprom.hpp"
 #include "pindefs.hpp"
 
+extern const AP_HAL::HAL& hal;
+
+const AP_Param::GroupInfo Radio::var_info[] {
+	    AP_GROUPINFO("FREQUENCY", 0, Radio, freq, 433.0f),
+	    AP_GROUPINFO("FH_CHANNELS", 1, Radio, fhChannels, 4),
+	    AP_GROUPINFO("MODEM_CFG", 2, Radio, modemCfg, 18),
+	    AP_GROUPEND
+};
+
 void Radio::handleInit() {
 	if(!init()) {
-		printf("radio init failed\n");
+		hal.scheduler->panic("radio init failed");
 	}
 
-	eeprom.get(&EEData::rfFrequency, freq);
-	eeprom.get(&EEData::afcPullIn, afc);
-	eeprom.get(&EEData::txPower, txPow);
-	eeprom.get(&EEData::modemCfg, modemCfg);
-	eeprom.get(&EEData::fhChannels, fhChannels);
-
-	if(afc > 0.159375f || afc < 0.0f) {
-		afc = 0.05;
-	}
+	freq.load();
+	modemCfg.load();
+	txPow.load();
 
 	setFHStepSize(10);
-	setFrequency(freq, afc);
-	setTxPower(txPow);
-	setModemConfig(modemCfg);
+	setFrequency(freq.get(), 0.05f);
+	setTxPower(txPow.get());
+	setModemConfig((RH_RF22::ModemConfigChoice)modemCfg.get());
 
 	setModeRx();
 }
@@ -65,29 +68,29 @@ void Radio::handleTick() {
 
 					//TODO: CHECK Values
 
-					fhChannels = cfg->fhChannels;
+					//fhChannels = cfg->fhChannels;
 
-					if(freq != cfg->frequency || afc != cfg->afcPullIn) {
-						freq = cfg->frequency;
-						afc = cfg->afcPullIn;
-						setFrequency(cfg->frequency, cfg->afcPullIn);
-
-						eeprom.put(&EEData::rfFrequency, freq);
-						eeprom.put(&EEData::afcPullIn, afc);
-					}
-
-					if(modemCfg != cfg->modemCfg) {
-						modemCfg = (RH_RF22::ModemConfigChoice)cfg->modemCfg;
-						setModemConfig(modemCfg);
-						eeprom.put(&EEData::modemCfg, cfg->modemCfg);
-					}
-					if(txPow != cfg->txPower) {
-						txPow = cfg->txPower;
-						setTxPower(txPow);
-						eeprom.put(&EEData::txPower, cfg->txPower);
-					}
-
-					eeprom.put(&EEData::fhChannels, cfg->fhChannels);
+//					if(freq != cfg->frequency || afc != cfg->afcPullIn) {
+//						freq = cfg->frequency;
+//						afc = cfg->afcPullIn;
+//						setFrequency(cfg->frequency, cfg->afcPullIn);
+//
+//						eeprom.put(&EEData::rfFrequency, freq);
+//						eeprom.put(&EEData::afcPullIn, afc);
+//					}
+//
+//					if(modemCfg != cfg->modemCfg) {
+//						modemCfg = (RH_RF22::ModemConfigChoice)cfg->modemCfg;
+//						setModemConfig(modemCfg);
+//						eeprom.put(&EEData::modemCfg, cfg->modemCfg);
+//					}
+//					if(txPow != cfg->txPower) {
+//						txPow = cfg->txPower;
+//						setTxPower(txPow);
+//						eeprom.put(&EEData::txPower, cfg->txPower);
+//					}
+//
+//					eeprom.put(&EEData::fhChannels, cfg->fhChannels);
 
 				}
 					break;

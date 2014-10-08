@@ -13,6 +13,8 @@
 
 extern uint32_t crashData[3];
 
+extern const AP_HAL::HAL& hal;
+
 void CmdTerminal::handleCommand(uint8_t nargs, char* argv[]) {
 //	if (cmp(argv[0], "quad")) {
 //		qController.handleCommand(*this, nargs, argv);
@@ -21,14 +23,6 @@ void CmdTerminal::handleCommand(uint8_t nargs, char* argv[]) {
 	if (cmp(argv[0], "ap_test")) {
 		extern void ap_test(char *a[], int argc);
 		ap_test(argv, nargs);
-	}
-
-	if (cmp(argv[0], "e0")) {
-		NVIC_DisableIRQ(EINT3_IRQn);
-	}
-
-	if (cmp(argv[0], "e1")) {
-		NVIC_EnableIRQ(EINT3_IRQn);
 	}
 
 	else if (cmp(argv[0], "hpid")) {
@@ -62,8 +56,7 @@ void CmdTerminal::handleCommand(uint8_t nargs, char* argv[]) {
 
 		//XPCC_LOG_DEBUG .printf("%d\n", qController.mpu.getAccelerationZ());
 	} else if (cmp(argv[0], "radio")) {
-		printf("Freq: %.4f\n", radio.freq);
-		printf("afc: %.4f\n", radio.afc);
+		printf("Freq: %.4f\n", radio.freq.get());
 		printf("modemCfg: %d\n", radio.modemCfg);
 		printf("FH channels: %d\n", radio.fhChannels);
 
@@ -71,8 +64,11 @@ void CmdTerminal::handleCommand(uint8_t nargs, char* argv[]) {
 	} else if (cmp(argv[0], "freq")) {
 		float f = toFloat(argv[1]);
 		XPCC_LOG_DEBUG .printf("%.1f\n", f);
+		radio.setFrequency(f);
 	}
-
+	else if (cmp(argv[0], "showall")) {
+		AP_Param::show_all(hal.console);
+	}
 	else if (cmp(argv[0], "i2r")) {
 		uint8_t addr = toInt(argv[1]);
 		uint8_t reg = toInt(argv[2]);
