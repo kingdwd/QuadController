@@ -9,9 +9,9 @@ using namespace XpccHAL;
 extern const AP_HAL::HAL& hal;
 
 const uint8_t analogMap[8] = { 0, 0, GPIO_PIN(0, 25), GPIO_PIN(0, 26),
-		0/*PIN(1,30)*/, GPIO_PIN(1, 31), GPIO_PIN(0, 3), GPIO_PIN(0, 2) };
+		GPIO_PIN(1,30), GPIO_PIN(1, 31), GPIO_PIN(0, 3), GPIO_PIN(0, 2) };
 
-LPC_GPIO_TypeDef* const ports[] = { LPC_GPIO0, LPC_GPIO1, LPC_GPIO2, LPC_GPIO3 };
+LPC_GPIO_TypeDef* const ports[] = { LPC_GPIO0, LPC_GPIO1, LPC_GPIO2 };
 
 GPIO::GPIO()
 {}
@@ -21,8 +21,8 @@ void GPIO::init()
 
 void GPIO::pinMode(uint8_t pin, uint8_t output)
 {
-	uint8_t port = pin >>5;
-	uint8_t p = pin & 0x1F;
+	uint8_t port = PORT(pin);
+	uint8_t p = PIN(pin);
 
 	if(port <= 3) {
 		if(output) {
@@ -46,16 +46,16 @@ int8_t GPIO::analogPinToDigitalPin(uint8_t pin)
 
 
 uint8_t GPIO::read(uint8_t pin) {
-	uint8_t port = pin >>5;
-	uint8_t p = pin & 0x1F;
+	uint8_t port = PORT(pin);
+	uint8_t p = PIN(pin);
 
 	return ports[port]->FIOPIN & (1<<p);
 }
 
 void GPIO::write(uint8_t pin, uint8_t value)
 {
-	uint8_t port = pin >>5;
-	uint8_t p = pin & 0x1F;
+	uint8_t port = PORT(pin);
+	uint8_t p = PIN(pin);
 	if(value)
 		ports[port]->FIOSET = (1<<p);
 	else
@@ -76,8 +76,8 @@ AP_HAL::DigitalSource* GPIO::channel(uint16_t n) {
 bool GPIO::attach_interrupt(uint8_t interrupt_num, AP_HAL::Proc p,
         uint8_t mode) {
 
-	uint8_t port = interrupt_num >> 5;
-	uint8_t pin = (interrupt_num & 0x1F);
+	uint8_t port = PORT(interrupt_num);
+	uint8_t pin = PIN(interrupt_num);
 
 	xpcc::IntEdge m;
     if (mode == HAL_GPIO_INTERRUPT_FALLING)

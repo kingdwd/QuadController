@@ -36,15 +36,16 @@ class AP : xpcc::TickerTask {
 };
 
 void dbgset() {
-	//LPC_GPIO1->FIOSET = 1<<18;
+	LPC_GPIO1->FIOSET = 1<<20;
 }
 void dbgclr() {
-	//LPC_GPIO1->FIOCLR = 1<<18;
+	LPC_GPIO1->FIOCLR = 1<<20;
 }
 
 AP ap;
 void ap_test(char *argv[], int argc) {
 	if(strcmp(argv[1], "init") == 0) {
+		LPC_GPIO1->FIODIR |= 1<<20;
 		hal.init(0, 0);
 		setup();
 

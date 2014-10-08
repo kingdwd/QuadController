@@ -62,16 +62,15 @@ void CmdTerminal::handleCommand(uint8_t nargs, char* argv[]) {
 
 		//XPCC_LOG_DEBUG .printf("%d\n", qController.mpu.getAccelerationZ());
 	} else if (cmp(argv[0], "radio")) {
-		//printf("Freq: %.4f\n", radio.freq);
-		//printf("afc: %.4f\n", radio.afc);
-		//printf("modemCfg: %d\n", radio.modemCfg);
-		//printf("FH channels: %d\n", radio.fhChannels);
+		printf("Freq: %.4f\n", radio.freq);
+		printf("afc: %.4f\n", radio.afc);
+		printf("modemCfg: %d\n", radio.modemCfg);
+		printf("FH channels: %d\n", radio.fhChannels);
 
 		//XPCC_LOG_DEBUG .printf("%d\n", qController.mpu.getAccelerationZ());
 	} else if (cmp(argv[0], "freq")) {
 		float f = toFloat(argv[1]);
-		radio.setFrequency(f, 0.05);
-		//XPCC_LOG_DEBUG .printf("%d\n", qController.mpu.getAccelerationZ());
+		XPCC_LOG_DEBUG .printf("%.1f\n", f);
 	}
 
 	else if (cmp(argv[0], "i2r")) {

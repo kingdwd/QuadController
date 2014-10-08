@@ -44,7 +44,7 @@ USBSerial device(0xffff, 0xf3c4);
 xpcc::IOStream stream(device);
 xpcc::NullIODevice null;
 
-BufferedUart<Uart0> uart0(115200, 1024, 128);
+BufferedUart<Uart0> uart0(115200, 512, 128);
 
 XpccHAL::UARTDriver uartADriver(&uart0);
 XpccHAL::UARTDriver uartBDriver(0);

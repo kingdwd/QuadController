@@ -5,6 +5,8 @@
 #include "AP_HAL_XPCC.h"
 
 #define GPIO_PIN(port, pin) ((pin&0x1F)|(port<<5))
+#define PORT(p) (p>>5)
+#define PIN(p) (p&0x1f)
 
 class XpccHAL::GPIO : public AP_HAL::GPIO {
 public:

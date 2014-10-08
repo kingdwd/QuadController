@@ -9,6 +9,7 @@
 #define RADIO_HPP_
 
 #include <xpcc/architecture.hpp>
+#include "cmd_terminal.hpp"
 #include "pindefs.hpp"
 #include <RH_RF22.h>
 
@@ -82,6 +83,8 @@ public:
 
     RCPacket rcData;
     Timestamp rcPacketTimestamp;
+
+    friend class CmdTerminal;
 
 protected:
 	void handleTxComplete();

@@ -1,30 +1,28 @@
 #include <xpcc/architecture.hpp>
 #include "AnalogIn.h"
-#include <stdio.h>
-
 
 using namespace XpccHAL;
 using namespace xpcc::lpc17;
 
-const uint8_t analogFunc[] = {0, 0, 1, 1, 0, 3, 2, 2};
+const uint8_t analogFunc[] = {0, 0, 1, 1, 3, 3, 2, 2};
 
 extern const AP_HAL::HAL& hal;
 
-AnalogSource::AnalogSource(int16_t chan) : _chan(chan)
+AnalogSource::AnalogSource(int16_t chan) : _chan(-1)
 {
-
+	set_pin(chan);
 }
 
 float AnalogSource::read_average() {
-    return 0;
+    return _voltage_avg;
 }
 
 float AnalogSource::voltage_average() {
-    return 0;
+    return _voltage_avg;
 }
 
 float AnalogSource::voltage_latest() {
-    return 0;
+    return read_latest();
 }
 
 float AnalogSource::read_latest() {
@@ -34,19 +32,29 @@ float AnalogSource::read_latest() {
     return ADC::getData(_chan) * (3.3f / 4096.0f);
 }
 
+void AnalogSource::_tick() {
+	_voltage_avg = (_voltage_avg*15 + read_latest()) / 16;
+}
+
 void AnalogSource::set_pin(uint8_t p)
 {
+	if(p == _chan)
+		return;
+
 	if(p > 8) {
 		_chan = 0;
 		return;
 	}
 
 	_chan = p;
-	p = hal.gpio->analogPinToDigitalPin(p);
+	int8_t apin = hal.gpio->analogPinToDigitalPin(p);
+	if(apin == -1) return;
 
-	uint8_t port = p & 0x03;
-	uint8_t pin = p >> 3;
-	printf("Analog source %d PORT%d PIN%d\n", _chan, port, pin);
+	p = apin;
+
+	uint8_t port = p >> 5;
+	uint8_t pin = p & 0x1F;
+	hal.console->printf("Analog source %d PORT%d PIN%d\n", _chan, port, pin);
 
 	if(analogFunc[_chan]) {
 		ADC::enableChannel(_chan);
@@ -69,12 +77,20 @@ void AnalogIn::init(void* machtnichts)
 {
 }
 
+void AnalogIn::_tick()
+{
+	for(int i = 0; i < 16; i++) {
+		if(channels[i]) {
+			channels[i]->_tick();
+		}
+	}
+}
+
 AP_HAL::AnalogSource* AnalogIn::channel(int16_t n) {
 
 	for(int i = 0; i < 16; i++) {
 		if(channels[i] == 0) {
 			channels[i] = new AnalogSource(n);
-			XPCC_LOG_DEBUG .printf("analog src %d %x\n",n, channels[i]);
 			return channels[i];
 		}
 	}

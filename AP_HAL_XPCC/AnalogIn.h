@@ -17,6 +17,11 @@ public:
     float voltage_average_ratiometric() { return voltage_average(); }
 
 private:
+    friend class XpccHAL::AnalogIn;
+    void _tick();
+
+    float _voltage_avg;
+
     uint8_t _chan;
 };
 
@@ -26,10 +31,13 @@ public:
     void init(void* implspecific);
     AP_HAL::AnalogSource* channel(int16_t n);
     float board_voltage(void) {
-    	return 3.3f;
+    	return 5.0f;
     }
 
+    friend class XpccHAL::Scheduler;
 private:
-    AP_HAL::AnalogSource* channels[16];
+    void _tick();
+
+    XpccHAL::AnalogSource* channels[16];
 };
 #endif // __AP_HAL_EMPTY_ANALOGIN_H__

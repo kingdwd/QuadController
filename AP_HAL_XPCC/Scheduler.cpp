@@ -1,6 +1,6 @@
 #include <xpcc/architecture.hpp>
 #include "Scheduler.h"
-
+#include "AnalogIn.h"
 
 using namespace XpccHAL;
 
@@ -50,6 +50,8 @@ void Scheduler::delay(uint16_t ms)
 void Scheduler::_timer_procs_timer_event()
 {
 	_run_timer_procs(true);
+
+	static_cast<AnalogIn*>(hal.analogin)->_tick();
 }
 //uint64_t Scheduler::millis64() {
 //    return 10000;
