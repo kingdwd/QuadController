@@ -31,9 +31,9 @@ int putchar(int c) {
 	return 1;
 }
 
-void delay(uint32_t millis) {
-	xpcc::delay_ms(millis);
-}
+//void delay(uint32_t millis) {
+//	xpcc::delay_ms(millis);
+//}
 
 void rh_yield() {
 	//xpcc::TickerTask::yield();
@@ -49,9 +49,9 @@ void rh_atomic_block_end() {
 	xpcc::GpioInt::enableInterrupts();
 }
 
-uint32_t millis() {
-	return xpcc::Clock::now().getTime();
-}
+//uint32_t millis() {
+//	return xpcc::Clock::now().getTime();
+//}
 
 void pinMode(uint8_t pin, WiringPinMode mode) {
 

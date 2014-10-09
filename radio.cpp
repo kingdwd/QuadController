@@ -12,8 +12,8 @@
 extern const AP_HAL::HAL& hal;
 
 const AP_Param::GroupInfo Radio::var_info[] {
-	    AP_GROUPINFO("FREQUENCY", 0, Radio, freq, 433.0f),
-	    AP_GROUPINFO("FH_CHANNELS", 1, Radio, fhChannels, 4),
+	    AP_GROUPINFO("FREQUENCY", 0, Radio, freq, 433000),
+	    AP_GROUPINFO("FH_CHANS", 1, Radio, fhChannels, 4),
 	    AP_GROUPINFO("MODEM_CFG", 2, Radio, modemCfg, 18),
 	    AP_GROUPEND
 };

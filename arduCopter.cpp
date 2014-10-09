@@ -5,6 +5,8 @@
  *      Author: walmis
  */
 
+#include <radio.hpp>
+
 #include <AP_Param.h>
 
 #include "AP_HAL_XPCC/AP_HAL_XPCC.h"

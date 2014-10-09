@@ -49,6 +49,7 @@ void HAL_XPCC::init(int argc,char* const argv[]) const {
      * up to the programmer to do this in the correct order.
      * Scheduler should likely come first. */
     scheduler->init(0);
+    storage->init(0);
     rcout->init(0);
 
 

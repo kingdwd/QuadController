@@ -22,18 +22,6 @@ extern const AP_HAL::HAL& hal;// = AP_HAL_XPCC;
 
 //AP_MotorsQuad motors(c, c, c, c, 100);
 
-extern void setup();
-extern void loop();
-
-bool init = 0;
-
-class AP : xpcc::TickerTask {
-	void handleTick() {
-		if(init) {
-			loop();
-		}
-	}
-};
 
 void dbgset() {
 	LPC_GPIO1->FIOSET = 1<<20;
@@ -42,28 +30,8 @@ void dbgclr() {
 	LPC_GPIO1->FIOCLR = 1<<20;
 }
 
-AP ap;
 void ap_test(char *argv[], int argc) {
-	if(strcmp(argv[1], "init") == 0) {
-		LPC_GPIO1->FIODIR |= 1<<20;
-		hal.init(0, 0);
-		setup();
 
-		init = true;
-	}
-
-	if(strcmp(argv[1], "uart") == 0) {
-
-		static uint32_t buffer[512];
-		for(int i = 0; i < 512; i++) {
-			buffer[i] = i;
-		}
-
-		uint8_t* b = (uint8_t*)buffer;
-		hal.uartA->set_blocking_writes(false);
-		hal.uartA->write(b, 1000);
-
-	}
 	//hal.init(0, 0);
 
 //	printf("%d\n", hal.rcin->read(2));

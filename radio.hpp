@@ -14,8 +14,6 @@
 #include <RH_RF22.h>
 #include <AP_Param.h>
 
-using namespace xpcc;
-
 enum PacketType {
 	PACKET_RC = 100,
 	PACKET_RF_PARAM_SET,
@@ -84,10 +82,10 @@ public:
     	return _txGood;
     }
 
-    void setFrequency(float f, float afc = 0.05f) {
+    void setFrequency(uint32_t f, float afc = 0.05f) {
     	freq.set_and_save_ifchanged(f);
 
-    	RH_RF22::setFrequency(f, afc);
+    	RH_RF22::setFrequency(f / 1000.0f, afc);
     }
 
     void setTxPower(uint8_t pow) {
@@ -97,7 +95,7 @@ public:
     }
 
     void setModemConfig(RH_RF22::ModemConfigChoice cfg) {
-    	modemCfg.set_and_save_ifchanged(cfg);
+    	modemCfg.set_and_save(cfg);
 
     	RH_RF22::setModemConfig(cfg);
     }
@@ -112,7 +110,7 @@ public:
 protected:
 	void handleTxComplete();
 
-	AP_Float freq;
+	AP_Int32 freq;
 	AP_Int8 txPow;
 
 	AP_Int8 modemCfg;

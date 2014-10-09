@@ -56,14 +56,14 @@ void CmdTerminal::handleCommand(uint8_t nargs, char* argv[]) {
 
 		//XPCC_LOG_DEBUG .printf("%d\n", qController.mpu.getAccelerationZ());
 	} else if (cmp(argv[0], "radio")) {
-		printf("Freq: %.4f\n", radio.freq.get());
+		printf("Freq: %d\n", radio.freq.get());
 		printf("modemCfg: %d\n", radio.modemCfg);
 		printf("FH channels: %d\n", radio.fhChannels);
 
 		//XPCC_LOG_DEBUG .printf("%d\n", qController.mpu.getAccelerationZ());
 	} else if (cmp(argv[0], "freq")) {
-		float f = toFloat(argv[1]);
-		XPCC_LOG_DEBUG .printf("%.1f\n", f);
+		uint32_t f = atol(argv[1]);
+		XPCC_LOG_DEBUG .printf("%d\n", f);
 		radio.setFrequency(f);
 	}
 	else if (cmp(argv[0], "showall")) {
