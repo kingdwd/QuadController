@@ -35,7 +35,7 @@ void Scheduler::delay(uint16_t ms)
     while (ms > 0) {
         while ((micros() - start) >= 1000) {
             ms--;
-            xpcc::TickerTask::yield();
+            xpcc::yield();
             if (ms == 0) break;
             start += 1000;
         }
