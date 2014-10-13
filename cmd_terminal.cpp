@@ -174,9 +174,9 @@ void CmdTerminal::handleCommand(uint8_t nargs, char* argv[]) {
 		//qController.mag.startCalibration();
 	}
 
-	else if (cmp(argv[0], "sendPacket")) {
+	else if (cmp(argv[0], "sendData")) {
 
-		radio.sendPacket((uint8_t*) 4, 200);
+		radio.write((uint8_t*)"labas labas\n", 12);
 
 	}
 	else if(cmp(argv[0], "eeread")) {

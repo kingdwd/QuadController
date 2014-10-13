@@ -15,23 +15,14 @@ void Storage::init(void*)
 {
 }
 
+//we are not using semaphore here because eeprom driver uses a
+//different i2c delegate than i2cdriver
+//and the i2c driver sorts everything out
 void Storage::read_block(void* dst, uint16_t src, size_t n) {
-	AP_HAL::Semaphore *sem = hal.i2c->get_semaphore();
-	if(sem->take(1000)) {
-		eeprom.read(src+1024, (uint8_t*)dst, n);
-		sem->give();
-	} else {
-		hal.console->println("Failed to take i2c semaphore in Storage::read_block");
-	}
+	eeprom.read(src+1024, (uint8_t*)dst, n);
 }
 
 void Storage::write_block(uint16_t loc, const void* src, size_t n)
 {
-	AP_HAL::Semaphore *sem = hal.i2c->get_semaphore();
-	if(sem->take(1000)) {
-		eeprom.write(loc+1024, (uint8_t*)src, n);
-		sem->give();
-	} else {
-		hal.console->println("Failed to take i2c semaphore in Storage::write_block");
-	}
+	eeprom.write(loc+1024, (uint8_t*)src, n);
 }

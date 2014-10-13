@@ -33,7 +33,7 @@ struct RadioCfgPacket : Packet {
 	RadioCfgPacket() {
 		id = PACKET_RF_PARAM_SET;
 	}
-	float frequency;
+	uint32_t frequency;
 	float afcPullIn;
 	uint8_t modemCfg;
 	uint8_t fhChannels;
@@ -49,13 +49,13 @@ struct RCPacket : Packet {
 	uint8_t switches;
 } __attribute__((packed));
 
-class Radio : TickerTask, public RH_RF22 {
+class Radio : TickerTask, public RH_RF22, public BufferedIODevice {
 public:
-	Radio() : RH_RF22(radio_sel::Pin | (radio_sel::Port<<5), radio_irq::Pin|(radio_irq::Port<<5)) {
-		dataPos = 0;
+	Radio() : RH_RF22(radio_sel::Pin | (radio_sel::Port<<5),
+			radio_irq::Pin|(radio_irq::Port<<5)),
+			BufferedIODevice(256, 256) {
 		dataLen = 0;
 		seq = 0;
-		dataSent = 0;
 		//lastAckSeq = 0;
 		numRetries = 0;
 
@@ -65,7 +65,6 @@ public:
 	void handleInit();
 	void handleTick();
 
-	bool sendPacket(const uint8_t* data, uint8_t len);
 	bool isSendingPacket() {
 		return dataLen != 0;
 	}
@@ -100,15 +99,18 @@ public:
     	RH_RF22::setModemConfig(cfg);
     }
 
+    const uint8_t latency = 10;
+    Timeout<> latencyTimer;
+
     RCPacket rcData;
     Timestamp rcPacketTimestamp;
 
     friend class CmdTerminal;
 
     static const struct AP_Param::GroupInfo var_info[];
-
 protected:
 	void handleTxComplete();
+	bool sendAck(Packet* inPkt);
 
 	AP_Int32 freq;
 	AP_Int8 txPow;
@@ -121,7 +123,6 @@ protected:
 	uint8_t packetBuf[255];
 
 	uint8_t dataLen; //packet size
-	uint8_t dataSent; //data sent
 	uint8_t dataPos;
 
 	//uint8_t lastAckSeq; //last acknowledged sequence number

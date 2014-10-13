@@ -4,8 +4,6 @@
 using namespace XpccHAL;
 using namespace xpcc::lpc17;
 
-const uint8_t analogFunc[] = {0, 0, 1, 1, 3, 3, 2, 2};
-
 extern const AP_HAL::HAL& hal;
 
 AnalogSource::AnalogSource(int16_t chan) : _chan(-1)
@@ -47,19 +45,9 @@ void AnalogSource::set_pin(uint8_t p)
 	}
 
 	_chan = p;
-	int8_t apin = hal.gpio->analogPinToDigitalPin(p);
-	if(apin == -1) return;
 
-	p = apin;
+	ADC::enableChannel(_chan);
 
-	uint8_t port = p >> 5;
-	uint8_t pin = p & 0x1F;
-	hal.console->printf("Analog source %d PORT%d PIN%d\n", _chan, port, pin);
-
-	if(analogFunc[_chan]) {
-		ADC::enableChannel(_chan);
-		Pinsel::setFunc(port, pin, analogFunc[_chan]);
-	}
 }
 
 void AnalogSource::set_stop_pin(uint8_t p)

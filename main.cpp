@@ -25,7 +25,6 @@
 #include "eeprom/eeprom.hpp"
 
 #include <RH_RF22.h>
-#include "mavlink.hpp"
 #include "radio.hpp"
 #include "AP_HAL_XPCC/UARTDriver.h"
 
@@ -41,24 +40,26 @@ const char fwversion[16] __attribute__((used, section(".fwversion"))) = "QuadV0.
 //#define _SER_DEBUG
 //UARTDevice uart(460800);
 
-USBSerial device(0xffff, 0xf3c4);
-xpcc::IOStream stream(device);
+Radio radio;
+USBSerial usbSerial(0xffff, 0xf3c4);
+xpcc::IOStream stream(usbSerial);
 xpcc::NullIODevice null;
 
 BufferedUart<Uart0> uart0(115200, 512, 128);
+IODeviceWrapper<Uart0> uart0raw;
 
 XpccHAL::UARTDriver uartADriver(&uart0);
 XpccHAL::UARTDriver uartBDriver(0);
-XpccHAL::UARTDriver uartCDriver(0);
+XpccHAL::UARTDriver uartCDriver(&radio);
 XpccHAL::UARTDriver uartDDriver(0);
 XpccHAL::UARTDriver uartEDriver(0);
-XpccHAL::UARTDriver uartConsoleDriver(&device);
+XpccHAL::UARTDriver uartConsoleDriver(&usbSerial);
 
 #ifdef _DEBUG
-xpcc::log::Logger xpcc::log::info(device);
-xpcc::log::Logger xpcc::log::debug(device);
-xpcc::log::Logger xpcc::log::error(device);
-xpcc::log::Logger xpcc::log::warning(device);
+xpcc::log::Logger xpcc::log::info(usbSerial);
+xpcc::log::Logger xpcc::log::debug(usbSerial);
+xpcc::log::Logger xpcc::log::error(uart0raw);
+xpcc::log::Logger xpcc::log::warning(usbSerial);
 #else
 #ifdef _SER_DEBUG
 xpcc::log::Logger xpcc::log::info(uart);
@@ -73,9 +74,9 @@ xpcc::log::Logger xpcc::log::error(null);
 #endif
 
 
-Radio radio;
 
-CmdTerminal terminal(device);
+
+CmdTerminal terminal(usbSerial);
 //CmdTerminal ucmd(uart);
 
 void idle() {
@@ -150,10 +151,14 @@ int main() {
 /////
 
 	usbConnPin::setOutput(true);
-	device.connect();
+	usbSerial.connect();
 
 	lpc17::ADC::init();
 	lpc17::ADC::burstMode(true);
+
+	//set uart0 pins
+	Pinsel::setFunc(0, 2, 1);
+	Pinsel::setFunc(0, 3, 1);
 
 	//initialize eeprom
 	eeprom.initialize();

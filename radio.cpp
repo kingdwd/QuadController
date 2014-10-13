@@ -36,61 +36,49 @@ void Radio::handleInit() {
 }
 static ProfileTimer pf;
 void Radio::handleTick() {
-	if(!radio_irq::read()) {
+	if (!radio_irq::read()) {
 		isr0();
 	}
 
-	if(!transmitting()) {
-		if(available()) {
+	if (!transmitting()) {
+		if (available()) {
 			uint8_t buf[255];
 			uint8_t len = sizeof(buf);
 			recv(buf, &len);
 
-			if(len >= sizeof(Packet)) {
-				Packet* inPkt = (Packet*)buf;
+			if (len >= sizeof(Packet)) {
+				Packet* inPkt = (Packet*) buf;
 
-				switch(inPkt->id) {
+				switch (inPkt->id) {
 				case PACKET_RC:
-					if(len == sizeof(RCPacket)) {
-						rcData = *((RCPacket*)inPkt);
+					if (len == sizeof(RCPacket)) {
+						rcData = *((RCPacket*) inPkt);
 						rcPacketTimestamp = Clock::now();
 					}
 					break;
-				case PACKET_RF_PARAM_SET:{
-					RadioCfgPacket* cfg = (RadioCfgPacket*)inPkt;
+				case PACKET_RF_PARAM_SET: {
+					RadioCfgPacket* cfg = (RadioCfgPacket*) inPkt;
 
 					printf("--Radio parameters received--\n");
-					printf("Freq %f\n", cfg->frequency);
+					printf("Freq %d\n", cfg->frequency);
 					printf("AfcPullIn %f\n", cfg->afcPullIn);
 					printf("Modem setting %d\n", cfg->modemCfg);
 					printf("FH Channels %d\n", cfg->fhChannels);
 					printf("TX Power %d\n", cfg->txPower);
 
-					//TODO: CHECK Values
+					if (freq != cfg->frequency) {
+						setFrequency(cfg->frequency, cfg->afcPullIn);
+					}
 
-					//fhChannels = cfg->fhChannels;
+					if (cfg->modemCfg != modemCfg) {
+						setModemConfig((RH_RF22::ModemConfigChoice) cfg->modemCfg);
+					}
 
-//					if(freq != cfg->frequency || afc != cfg->afcPullIn) {
-//						freq = cfg->frequency;
-//						afc = cfg->afcPullIn;
-//						setFrequency(cfg->frequency, cfg->afcPullIn);
-//
-//						eeprom.put(&EEData::rfFrequency, freq);
-//						eeprom.put(&EEData::afcPullIn, afc);
-//					}
-//
-//					if(modemCfg != cfg->modemCfg) {
-//						modemCfg = (RH_RF22::ModemConfigChoice)cfg->modemCfg;
-//						setModemConfig(modemCfg);
-//						eeprom.put(&EEData::modemCfg, cfg->modemCfg);
-//					}
-//					if(txPow != cfg->txPower) {
-//						txPow = cfg->txPower;
-//						setTxPower(txPow);
-//						eeprom.put(&EEData::txPower, cfg->txPower);
-//					}
-//
-//					eeprom.put(&EEData::fhChannels, cfg->fhChannels);
+					if (txPow != cfg->txPower) {
+						setTxPower(txPow);
+					}
+
+					fhChannels.set_and_save_ifchanged(cfg->fhChannels);
 
 				}
 					break;
@@ -98,77 +86,58 @@ void Radio::handleTick() {
 
 				//received packet, send data back
 				//if no data is available, send only ack
-				if(inPkt->id >= PACKET_RC) {
+				if (inPkt->id >= PACKET_RC) {
 					//lastAckSeq = inPkt->ackSeq; //set last acknowledged ours packet
-					if(fhChannels)
-						setFHChannel((inPkt->seq^0x55) % fhChannels);
+					if (fhChannels)
+						setFHChannel((inPkt->seq ^ 0x55) % fhChannels);
 
-					if(dataLen) {
-						if(inPkt->ackSeq == seq) {
-							//send next fragment
-							dataPos += dataSent;
-							if((dataPos - sizeof(Packet)) == dataLen) {
-								dataLen = 0;
-								goto sendack;
-							}
-						} else {
-							numRetries++;
-						}
+					sendAck(inPkt);
 
-						Packet *hdr = (Packet*)(packetBuf+dataPos-sizeof(Packet));
-
-						dataSent = dataLen - (dataPos - sizeof(Packet));
-						uint8_t m = maxFragment - sizeof(Packet);
-						if(dataSent > m) {
-							dataSent = m;
-							if(dataPos == sizeof(Packet)) {
-								hdr->id = PACKET_DATA_FIRST;
-							} else {
-								hdr->id = PACKET_DATA;
-							}
-
-						} else {
-							hdr->id = PACKET_DATA_LAST;
-						}
-						hdr->seq = ++seq;
-						hdr->ackSeq = inPkt->seq; //acknowledge received packet
-
-						printf("send frag %d %d\n", dataSent, dataPos-sizeof(Packet));
-
-						RH_RF22::send(packetBuf+dataPos-sizeof(Packet),
-								dataSent+sizeof(Packet));
-
-					} else { //send only ack
-sendack:
-						Packet p;
-						p.id = PACKET_ACK;
-						p.seq = ++seq;
-						p.ackSeq = inPkt->seq; //acknowledge received packet
-						//delay_ms(2);
-						RH_RF22::send((uint8_t*)&p, sizeof(Packet));
-					}
 				}
 			}
-
-			//XPCC_LOG_DEBUG .dump_buffer(buf, len);
-
 		}
+
+		//XPCC_LOG_DEBUG .dump_buffer(buf, len);
+
 	}
 }
 
-bool Radio::sendPacket(const uint8_t* data, uint8_t len) {
-	if(!dataLen) {
-		dataLen = len;
-		if(dataLen > sizeof(packetBuf)-sizeof(Packet))
-			dataLen = sizeof(packetBuf)-sizeof(Packet);
-		dataSent = 0;
-		dataPos = sizeof(Packet);
+bool Radio::sendAck(Packet* inPkt) {
+	uint16_t txavail = txbuf.bytes_used();
+	Packet* out = (Packet*)packetBuf;
 
-		memcpy(packetBuf+dataPos, data, dataLen);
-		return true;
+	if(inPkt->ackSeq != seq && out->id == PACKET_DATA) {
+		//retry last data transmission
+		printf("Retry\n");
+		out->seq = ++seq;
+		out->ackSeq = inPkt->seq;
+
+		RH_RF22::send(packetBuf, dataLen);
+	} else {
+
+		out->seq = ++seq;
+		out->ackSeq = inPkt->seq; //acknowledge received packet
+		out->id = PACKET_DATA;
+
+		if((txavail >= maxFragment) || (latencyTimer.isExpired() && txavail)) {
+
+			uint8_t* buf = packetBuf + sizeof(Packet);
+			for(int i = 0; i < std::min((uint16_t)maxFragment, txavail); i++) {
+				*buf++ = txbuf.read();
+			}
+
+			dataLen = buf - packetBuf;
+			printf("Send data %d\n", dataLen);
+			RH_RF22::send(packetBuf, dataLen);
+
+			latencyTimer.restart(latency);
+		} else {
+			out->id = PACKET_ACK; //no data to send, send ack
+			RH_RF22::send(packetBuf, sizeof(Packet));
+		}
 	}
 
-	return false;
+	return true;
 }
 
 uint8_t Radio::spiBurstWrite0(uint8_t reg, const uint8_t* src, uint8_t len) {
