@@ -34,7 +34,7 @@ void Radio::handleInit() {
 
 	setModeRx();
 }
-static ProfileTimer pf;
+
 void Radio::handleTick() {
 	if (!radio_irq::read()) {
 		isr0();
@@ -51,10 +51,18 @@ void Radio::handleTick() {
 
 				switch (inPkt->id) {
 				case PACKET_RC:
-					if (len == sizeof(RCPacket)) {
+					if(len >= sizeof(RCPacket)) {
 						rcData = *((RCPacket*) inPkt);
 						rcPacketTimestamp = Clock::now();
+
+						uint8_t payload_len = len - sizeof(RCPacket);
+						if(payload_len) {
+							//TODO discard duplicates
+
+							rxbuf.write(buf+sizeof(RCPacket), payload_len);
+						}
 					}
+
 					break;
 				case PACKET_RF_PARAM_SET: {
 					RadioCfgPacket* cfg = (RadioCfgPacket*) inPkt;
@@ -127,7 +135,7 @@ bool Radio::sendAck(Packet* inPkt) {
 			}
 
 			dataLen = buf - packetBuf;
-			printf("Send data %d\n", dataLen);
+			//printf("Send data %d\n", dataLen);
 			RH_RF22::send(packetBuf, dataLen);
 
 			latencyTimer.restart(latency);
@@ -186,5 +194,5 @@ uint8_t Radio::spiBurstRead0(uint8_t reg, uint8_t* dest, uint8_t len) {
 }
 
 void Radio::handleTxComplete() {
-	//setModeRx();
+	setModeRx();
 }

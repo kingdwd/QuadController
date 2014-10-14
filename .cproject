@@ -52,8 +52,8 @@
 							</tool>
 							<tool commandLinePattern="${COMMAND} ${FLAGS}  -MT ${OUTPUT_PREFIX}${OUTPUT} ${OUTPUT_FLAG} ${OUTPUT_PREFIX}${OUTPUT} ${INPUTS}" id="cdt.managedbuild.tool.gnu.cross.cpp.compiler.734776083" name="Cross G++ Compiler" superClass="cdt.managedbuild.tool.gnu.cross.cpp.compiler">
 								<option id="gnu.cpp.compiler.option.optimization.level.214688961" name="Optimization Level" superClass="gnu.cpp.compiler.option.optimization.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.optimization.level.size" valueType="enumerated"/>
-								<option id="gnu.cpp.compiler.option.debugging.level.198500155" name="Debug Level" superClass="gnu.cpp.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.debugging.level.none" valueType="enumerated"/>
-								<option id="gnu.cpp.compiler.option.other.other.359987823" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" useByScannerDiscovery="false" value="-Wno-unused-function -Wno-write-strings -c -fmessage-length=0 -mthumb -ffunction-sections -fdata-sections  -mcpu=cortex-m3 -fno-rtti -fno-exceptions" valueType="string"/>
+								<option id="gnu.cpp.compiler.option.debugging.level.198500155" name="Debug Level" superClass="gnu.cpp.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.debugging.level.default" valueType="enumerated"/>
+								<option id="gnu.cpp.compiler.option.other.other.359987823" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" useByScannerDiscovery="false" value="-save-temps -Wno-unused-function -Wno-write-strings -c -fmessage-length=0 -mthumb -ffunction-sections -fdata-sections  -mcpu=cortex-m3 -fno-rtti -fno-exceptions" valueType="string"/>
 								<option id="gnu.cpp.compiler.option.include.paths.1280403109" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/RadioHead}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ArduCopter}&quot;"/>
