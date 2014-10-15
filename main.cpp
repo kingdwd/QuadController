@@ -95,7 +95,7 @@ void idle() {
 
 void wd_init() {
 	LPC_WDT->WDMOD = 0x1;
-	LPC_WDT->WDTC = 5000000;
+	LPC_WDT->WDTC = 6000000;
 	LPC_WDT->WDFEED = 0xAA;
 	LPC_WDT->WDFEED = 0x55;
 	NVIC_SetPriority(WDT_IRQn, 0);
@@ -118,6 +118,11 @@ const APM apm;
 
 int main() {
 	wd_init();
+
+	NVIC_SetPriority(USB_IRQn, 10);
+	//NVIC_SetPriority(EINT3_IRQn, 2);
+	//NVIC_SetPriority(UART0_IRQn, 5);
+	//NVIC_SetPriority(I2C2_IRQn, 0);
 
 	//debugIrq = true;
 	ledRed::setOutput(true);
@@ -163,8 +168,7 @@ int main() {
 	//initialize eeprom
 	eeprom.initialize();
 
-	NVIC_SetPriority(USB_IRQn, 10);
-	NVIC_SetPriority(EINT3_IRQn, 0);
+
 
 	hal.init(0, 0);
 

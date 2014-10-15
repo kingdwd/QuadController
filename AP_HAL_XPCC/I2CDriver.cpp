@@ -20,7 +20,7 @@ uint8_t I2CDriver::write(uint8_t addr, uint8_t len, uint8_t* data)
 	if(!I2C::start(&adapter)) {
 		return 1;
 	}
-	while(I2C::isBusy()) {
+	while(adapter.getState() == xpcc::I2cWriteReadAdapter::AdapterState::Busy) {
 		//yield();
 	}
 	return adapter.getState() != xpcc::I2cWriteReadAdapter::AdapterState::Idle;
@@ -36,7 +36,7 @@ uint8_t I2CDriver::writeRegister(uint8_t addr, uint8_t reg, uint8_t val)
 	if(!I2C::start(&adapter)) {
 		return 1;
 	}
-	while(I2C::isBusy()) {
+	while(adapter.getState() == xpcc::I2cWriteReadAdapter::AdapterState::Busy) {
 		//yield();
 	}
 	return adapter.getState() != xpcc::I2cWriteReadAdapter::AdapterState::Idle;
@@ -54,7 +54,7 @@ uint8_t I2CDriver::writeRegisters(uint8_t addr, uint8_t reg,
 	if(!I2C::start(&adapter)) {
 		return 1;
 	}
-	while(I2C::isBusy()) {
+	while(adapter.getState() == xpcc::I2cWriteReadAdapter::AdapterState::Busy) {
 		//yield();
 	}
 	return adapter.getState() != xpcc::I2cWriteReadAdapter::AdapterState::Idle;
@@ -68,7 +68,7 @@ uint8_t I2CDriver::read(uint8_t addr, uint8_t len, uint8_t* data)
 	if(!I2C::start(&adapter)) {
 		return 1;
 	}
-	while(I2C::isBusy()) {
+	while(adapter.getState() == xpcc::I2cWriteReadAdapter::AdapterState::Busy) {
 		//yield();
 	}
 	return adapter.getState() != xpcc::I2cWriteReadAdapter::AdapterState::Idle;
@@ -82,7 +82,7 @@ uint8_t I2CDriver::readRegister(uint8_t addr, uint8_t reg, uint8_t* data)
 	if(!I2C::start(&adapter)) {
 		return 1;
 	}
-	while(I2C::isBusy()) {
+	while(adapter.getState() == xpcc::I2cWriteReadAdapter::AdapterState::Busy) {
 		//yield();
 	}
 	return adapter.getState() != xpcc::I2cWriteReadAdapter::AdapterState::Idle;
@@ -99,7 +99,7 @@ uint8_t I2CDriver::readRegisters(uint8_t addr, uint8_t reg,
 	if(!I2C::start(&adapter)) {
 		return 1;
 	}
-	while(I2C::isBusy()) {
+	while(adapter.getState() == xpcc::I2cWriteReadAdapter::AdapterState::Busy) {
 		//yield();
 	}
 	return adapter.getState() != xpcc::I2cWriteReadAdapter::AdapterState::Idle;

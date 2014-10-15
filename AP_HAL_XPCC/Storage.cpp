@@ -19,12 +19,10 @@ void Storage::init(void*)
 //different i2c delegate than i2cdriver
 //and the i2c driver sorts everything out
 void Storage::read_block(void* dst, uint16_t src, size_t n) {
-	XPCC_LOG_DEBUG .printf("r\n");
 	eeprom.read(src+1024, (uint8_t*)dst, n);
 }
 
 void Storage::write_block(uint16_t loc, const void* src, size_t n)
 {
-	XPCC_LOG_DEBUG .printf("w\n");
 	eeprom.write(loc+1024, (uint8_t*)src, n);
 }
