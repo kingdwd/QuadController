@@ -2,7 +2,7 @@
 #include "RCInput.h"
 #include <radio.hpp>
 
-#define NUM_CHANNELS 6
+#define NUM_CHANNELS 9
 
 using namespace XpccHAL;
 RCInput::RCInput()
@@ -15,6 +15,11 @@ void RCInput::init(void* machtnichts)
 #define RC_PITCH 1
 #define RC_THROTTLE 2
 #define RC_YAW 3
+#define RC_5 4
+#define RC_6 5
+#define RC_7 6
+#define RC_8 7
+#define RC_9 8
 
 bool RCInput::new_input() {
     if(radio.rcPacketTimestamp != last_read) {
@@ -42,7 +47,29 @@ uint16_t RCInput::read(uint8_t ch) {
     case RC_YAW:
     	val = radio.rcData.yawCh;
     	break;
+    case RC_5: {
+    	uint8_t c = radio.rcData.switches >> 3;
+    	switch(c) {
+    	case 0:
+    		return 1500;
+    	case 1:
+    		return 1000;
+    	case 2:
+    		return 2000;
+    	}
+    	break;
     }
+    case RC_6:
+    	val = radio.rcData.auxCh;
+    	break;
+
+	case RC_7:
+		return (radio.rcData.switches & (1<<0)) ? 2000 : 1000;
+	case RC_8:
+		return (radio.rcData.switches & (1<<1)) ? 2000 : 1000;
+	case RC_9:
+		return (radio.rcData.switches & (1<<2)) ? 2000 : 1000;
+	}
 
 	return 990 + val;
 }

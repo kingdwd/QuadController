@@ -48,7 +48,7 @@ xpcc::NullIODevice null;
 BufferedUart<Uart0> uart0(115200, 512, 128);
 IODeviceWrapper<Uart0> uart0raw;
 
-XpccHAL::UARTDriver uartADriver(&uart0);
+XpccHAL::UARTDriver uartADriver(&usbSerial);
 XpccHAL::UARTDriver uartBDriver(0);
 XpccHAL::UARTDriver uartCDriver(&radio);
 XpccHAL::UARTDriver uartDDriver(0);
@@ -101,9 +101,13 @@ void idle() {
 	dbgclr();
 }
 
+void set_wd_timeout(uint32_t seconds) {
+	LPC_WDT->WDTC = (seconds*1000000000UL) /
+			(1000000000UL/(CLKPwr::getPCLK(CLKPwr::ClkType::WDT)/4));
+}
+
 void wd_init() {
 	LPC_WDT->WDMOD = 0x1;
-	LPC_WDT->WDTC = 6000000;
 	LPC_WDT->WDFEED = 0xAA;
 	LPC_WDT->WDFEED = 0x55;
 	NVIC_SetPriority(WDT_IRQn, 0);
@@ -115,7 +119,9 @@ void panic(const char* msg) {
 	while(1);
 }
 
+extern void setup();
 extern void loop();
+
 class APM final : xpcc::TickerTask {
 	void handleTick() {
 		loop();
@@ -126,14 +132,13 @@ const APM apm;
 
 int main() {
 	LPC_GPIO1->FIODIR |= 1<<20;
+	set_wd_timeout(15);
 	wd_init();
 
-	NVIC_SetPriority(USB_IRQn, 10);
+	NVIC_SetPriority(USB_IRQn, 4);
 	//NVIC_SetPriority(EINT3_IRQn, 2);
 	//NVIC_SetPriority(UART0_IRQn, 5);
 	//NVIC_SetPriority(I2C2_IRQn, 0);
-
-
 
 	//debugIrq = true;
 	ledRed::setOutput(true);
@@ -166,9 +171,6 @@ int main() {
 	Pinsel::setFunc(0, 11, 2); //I2C2
 /////
 
-	usbConnPin::setOutput(true);
-	usbSerial.connect();
-
 	lpc17::ADC::init();
 	lpc17::ADC::burstMode(true);
 
@@ -176,13 +178,16 @@ int main() {
 	Pinsel::setFunc(0, 2, 1);
 	Pinsel::setFunc(0, 3, 1);
 
+	usbConnPin::setOutput(true);
+	usbSerial.connect();
+
 	//initialize eeprom
 	eeprom.initialize();
 
 	hal.init(0, 0);
 
-	extern void setup();
 	setup();
 
+	set_wd_timeout(1);
 	TickerTask::tasksRun(idle);
 }

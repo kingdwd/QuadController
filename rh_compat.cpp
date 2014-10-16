@@ -39,10 +39,8 @@ void rh_yield() {
 	//xpcc::TickerTask::yield();
 }
 
-
 void rh_atomic_block_start() {
 	xpcc::GpioInt::disableInterrupts();
-
 }
 
 void rh_atomic_block_end() {
@@ -56,7 +54,7 @@ void rh_atomic_block_end() {
 void pinMode(uint8_t pin, WiringPinMode mode) {
 
 	LPC_GPIO_TypeDef* g = 0;
-	uint8_t p = pin&0x1F;
+	uint8_t p = pin & 0x1F;
 	switch(pin>>5) {
 	case 0:
 		g = LPC_GPIO0;

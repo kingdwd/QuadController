@@ -15,6 +15,7 @@ const AP_Param::GroupInfo Radio::var_info[] {
 	    AP_GROUPINFO("FREQUENCY", 0, Radio, freq, 433000),
 	    AP_GROUPINFO("FH_CHANS", 1, Radio, fhChannels, 4),
 	    AP_GROUPINFO("MODEM_CFG", 2, Radio, modemCfg, 18),
+	    AP_GROUPINFO("MAX_FRAGM", 3, Radio, maxFragment, 64),
 	    AP_GROUPEND
 };
 
@@ -99,6 +100,7 @@ void Radio::handleTick() {
 					if (fhChannels)
 						setFHChannel((inPkt->seq ^ 0x55) % fhChannels);
 
+					//printf("*\n");
 					sendAck(inPkt);
 
 				}
@@ -114,6 +116,14 @@ bool Radio::sendAck(Packet* inPkt) {
 	uint16_t txavail = txbuf.bytes_used();
 	Packet* out = (Packet*)packetBuf;
 
+	if((uint16_t)maxFragment > (RH_RF22_MAX_MESSAGE_LEN - sizeof(Packet))) {
+		maxFragment = RH_RF22_MAX_MESSAGE_LEN - sizeof(Packet);
+	} else if((uint16_t)maxFragment < 32) {
+		maxFragment = 32;
+	}
+	uint16_t maxFrag = maxFragment;
+
+
 	if(inPkt->ackSeq != seq && out->id == PACKET_DATA) {
 		//retry last data transmission
 		printf("Retry\n");
@@ -127,10 +137,10 @@ bool Radio::sendAck(Packet* inPkt) {
 		out->ackSeq = inPkt->seq; //acknowledge received packet
 		out->id = PACKET_DATA;
 
-		if((txavail >= maxFragment) || (latencyTimer.isExpired() && txavail)) {
+		if((txavail >= maxFrag) || (latencyTimer.isExpired() && txavail)) {
 
 			uint8_t* buf = packetBuf + sizeof(Packet);
-			for(int i = 0; i < std::min((uint16_t)maxFragment, txavail); i++) {
+			for(int i = 0; i < std::min(maxFrag, txavail); i++) {
 				*buf++ = txbuf.read();
 			}
 
@@ -148,7 +158,7 @@ bool Radio::sendAck(Packet* inPkt) {
 	return true;
 }
 
-uint8_t Radio::spiBurstWrite(uint8_t reg, const uint8_t* src, uint8_t len) {
+uint8_t Radio::spiBurstWrite0(uint8_t reg, const uint8_t* src, uint8_t len) {
     uint8_t status = 0;
     ATOMIC_BLOCK_START;
     digitalWrite(_slaveSelectPin, LOW);
@@ -157,7 +167,7 @@ uint8_t Radio::spiBurstWrite(uint8_t reg, const uint8_t* src, uint8_t len) {
     while(len) {
     	uint8_t written = radioSpiMaster::burstWrite(src, len);
     	while(!radioSpiMaster::txFifoEmpty()) {
-    		xpcc::yield();
+    		//xpcc::yield();
     	}
     	len -= written;
     	src += written;
@@ -168,7 +178,7 @@ uint8_t Radio::spiBurstWrite(uint8_t reg, const uint8_t* src, uint8_t len) {
     return status;
 }
 
-uint8_t Radio::spiBurstRead(uint8_t reg, uint8_t* dest, uint8_t len) {
+uint8_t Radio::spiBurstRead0(uint8_t reg, uint8_t* dest, uint8_t len) {
     uint8_t status = 0;
     ATOMIC_BLOCK_START;
     digitalWrite(_slaveSelectPin, LOW);
@@ -181,7 +191,7 @@ uint8_t Radio::spiBurstRead(uint8_t reg, uint8_t* dest, uint8_t len) {
     	uint8_t n = radioSpiMaster::burstWrite(dest, len);
     	//wait until transfer finishes
     	while(radioSpiMaster::isBusy()) {
-    		xpcc::yield();
+    		//xpcc::yield();
     	}
     	radioSpiMaster::burstRead(dest, len);
 

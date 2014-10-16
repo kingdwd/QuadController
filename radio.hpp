@@ -99,7 +99,7 @@ public:
     	RH_RF22::setModemConfig(cfg);
     }
 
-    const uint8_t latency = 10;
+    const uint8_t latency = 1;
     Timeout<> latencyTimer;
 
     RCPacket rcData;
@@ -117,8 +117,7 @@ protected:
 
 	AP_Int8 modemCfg;
 	AP_Int8 fhChannels;
-
-	uint8_t maxFragment = 64;
+	AP_Int16 maxFragment;
 
 	uint8_t packetBuf[255];
 
@@ -141,8 +140,8 @@ protected:
 
 private:
 
-    uint8_t spiBurstWrite(uint8_t reg, const uint8_t* src, uint8_t len);
-    uint8_t spiBurstRead(uint8_t reg, uint8_t* dest, uint8_t len);
+    uint8_t spiBurstWrite0(uint8_t reg, const uint8_t* src, uint8_t len);
+    uint8_t spiBurstRead0(uint8_t reg, uint8_t* dest, uint8_t len);
 
 };
 
