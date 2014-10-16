@@ -44,6 +44,7 @@ void Scheduler::delay(uint16_t ms)
             	_delay_proc();
             }
         }
+        xpcc::yield();
     }
 }
 
@@ -178,4 +179,8 @@ void Scheduler::reboot(bool hold_in_bootloader) {
 	} else {
 		NVIC_SystemReset();
 	}
+}
+
+void Scheduler::yield() {
+	xpcc::yield();
 }

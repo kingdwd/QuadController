@@ -5,7 +5,7 @@
 #include <AP_HAL.h>
 #include "AP_HAL_Empty_Namespace.h"
 
-class XpccHAL::Util : public AP_HAL::Util {
+class XpccHAL::Util final : public AP_HAL::Util {
 public:
     bool run_debug_shell(AP_HAL::BetterStream *stream) { return false; }
     uint16_t available_memory(void);

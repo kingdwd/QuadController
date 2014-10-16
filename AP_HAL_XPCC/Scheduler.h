@@ -6,7 +6,7 @@
 
 #define MAX_TIMER_PROCS 4
 
-class XpccHAL::Scheduler : public AP_HAL::Scheduler {
+class XpccHAL::Scheduler final : public AP_HAL::Scheduler {
 public:
     Scheduler();
     void     init(void* machtnichts);
@@ -36,6 +36,8 @@ public:
 
     void     panic(const prog_char_t *errormsg);
     void     reboot(bool hold_in_bootloader);
+
+    void	 yield();
 
 private:
     AP_HAL::Proc volatile _delay_proc;

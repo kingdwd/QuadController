@@ -5,7 +5,7 @@
 #include "AP_HAL_XPCC.h"
 #include "Semaphores.h"
 
-class XpccHAL::SPIDeviceDriver : public AP_HAL::SPIDeviceDriver {
+class XpccHAL::SPIDeviceDriver final : public AP_HAL::SPIDeviceDriver {
 public:
     SPIDeviceDriver();
     void init();

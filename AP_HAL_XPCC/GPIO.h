@@ -8,7 +8,7 @@
 #define PORT(p) (p>>5)
 #define PIN(p) (p&0x1f)
 
-class XpccHAL::GPIO : public AP_HAL::GPIO {
+class XpccHAL::GPIO final : public AP_HAL::GPIO {
 public:
     GPIO();
     void    init();

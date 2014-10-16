@@ -13,7 +13,7 @@
 
 using namespace xpcc;
 
-class CmdTerminal : public Terminal {
+class CmdTerminal final : public Terminal {
 public:
 	CmdTerminal(IODevice& device) : Terminal(device), ios(device) {
 

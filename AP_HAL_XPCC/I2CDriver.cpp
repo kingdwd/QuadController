@@ -1,6 +1,7 @@
 
 #include <AP_HAL.h>
 #include "I2CDriver.h"
+#include <xpcc/architecture.hpp>
 
 using namespace XpccHAL;
 
@@ -21,7 +22,7 @@ uint8_t I2CDriver::write(uint8_t addr, uint8_t len, uint8_t* data)
 		return 1;
 	}
 	while(adapter.getState() == xpcc::I2cWriteReadAdapter::AdapterState::Busy) {
-		//yield();
+		xpcc::yield();
 	}
 	return adapter.getState() != xpcc::I2cWriteReadAdapter::AdapterState::Idle;
 }
@@ -37,7 +38,7 @@ uint8_t I2CDriver::writeRegister(uint8_t addr, uint8_t reg, uint8_t val)
 		return 1;
 	}
 	while(adapter.getState() == xpcc::I2cWriteReadAdapter::AdapterState::Busy) {
-		//yield();
+		xpcc::yield();
 	}
 	return adapter.getState() != xpcc::I2cWriteReadAdapter::AdapterState::Idle;
 }
@@ -55,7 +56,7 @@ uint8_t I2CDriver::writeRegisters(uint8_t addr, uint8_t reg,
 		return 1;
 	}
 	while(adapter.getState() == xpcc::I2cWriteReadAdapter::AdapterState::Busy) {
-		//yield();
+		xpcc::yield();
 	}
 	return adapter.getState() != xpcc::I2cWriteReadAdapter::AdapterState::Idle;
 }
@@ -69,7 +70,7 @@ uint8_t I2CDriver::read(uint8_t addr, uint8_t len, uint8_t* data)
 		return 1;
 	}
 	while(adapter.getState() == xpcc::I2cWriteReadAdapter::AdapterState::Busy) {
-		//yield();
+		xpcc::yield();
 	}
 	return adapter.getState() != xpcc::I2cWriteReadAdapter::AdapterState::Idle;
 }
@@ -83,7 +84,7 @@ uint8_t I2CDriver::readRegister(uint8_t addr, uint8_t reg, uint8_t* data)
 		return 1;
 	}
 	while(adapter.getState() == xpcc::I2cWriteReadAdapter::AdapterState::Busy) {
-		//yield();
+		xpcc::yield();
 	}
 	return adapter.getState() != xpcc::I2cWriteReadAdapter::AdapterState::Idle;
 }
@@ -100,7 +101,7 @@ uint8_t I2CDriver::readRegisters(uint8_t addr, uint8_t reg,
 		return 1;
 	}
 	while(adapter.getState() == xpcc::I2cWriteReadAdapter::AdapterState::Busy) {
-		//yield();
+		xpcc::yield();
 	}
 	return adapter.getState() != xpcc::I2cWriteReadAdapter::AdapterState::Idle;
 }

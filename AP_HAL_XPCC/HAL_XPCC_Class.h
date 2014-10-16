@@ -7,7 +7,7 @@
 #include "AP_HAL_Empty_Namespace.h"
 #include "PrivateMember.h"
 
-class HAL_XPCC : public AP_HAL::HAL {
+class HAL_XPCC final : public AP_HAL::HAL {
 public:
     HAL_XPCC();
     void init(int argc, char * const * argv) const;

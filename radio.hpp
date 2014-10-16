@@ -49,7 +49,7 @@ struct RCPacket : Packet {
 	uint8_t switches;
 } __attribute__((packed));
 
-class Radio : TickerTask, public RH_RF22, public BufferedIODevice {
+class Radio final : TickerTask, public RH_RF22, public BufferedIODevice {
 public:
 	Radio() : RH_RF22(radio_sel::Pin | (radio_sel::Port<<5),
 			radio_irq::Pin|(radio_irq::Port<<5)),
@@ -141,8 +141,8 @@ protected:
 
 private:
 
-    uint8_t spiBurstWrite0(uint8_t reg, const uint8_t* src, uint8_t len);
-    uint8_t spiBurstRead0(uint8_t reg, uint8_t* dest, uint8_t len);
+    uint8_t spiBurstWrite(uint8_t reg, const uint8_t* src, uint8_t len);
+    uint8_t spiBurstRead(uint8_t reg, uint8_t* dest, uint8_t len);
 
 };
 

@@ -148,28 +148,29 @@ bool Radio::sendAck(Packet* inPkt) {
 	return true;
 }
 
-uint8_t Radio::spiBurstWrite0(uint8_t reg, const uint8_t* src, uint8_t len) {
+uint8_t Radio::spiBurstWrite(uint8_t reg, const uint8_t* src, uint8_t len) {
     uint8_t status = 0;
-
+    ATOMIC_BLOCK_START;
     digitalWrite(_slaveSelectPin, LOW);
     status = radioSpiMaster::write(reg | RH_SPI_WRITE_MASK);
 
     while(len) {
     	uint8_t written = radioSpiMaster::burstWrite(src, len);
     	while(!radioSpiMaster::txFifoEmpty()) {
-    		//TickerTask::yield();
+    		xpcc::yield();
     	}
     	len -= written;
     	src += written;
     }
     radioSpiMaster::flushRx();
     digitalWrite(_slaveSelectPin, HIGH);
+    ATOMIC_BLOCK_END;
     return status;
 }
 
-uint8_t Radio::spiBurstRead0(uint8_t reg, uint8_t* dest, uint8_t len) {
+uint8_t Radio::spiBurstRead(uint8_t reg, uint8_t* dest, uint8_t len) {
     uint8_t status = 0;
-
+    ATOMIC_BLOCK_START;
     digitalWrite(_slaveSelectPin, LOW);
 
     status = radioSpiMaster::write(reg & ~RH_SPI_WRITE_MASK); // Send the start address with the write mask off
@@ -180,7 +181,7 @@ uint8_t Radio::spiBurstRead0(uint8_t reg, uint8_t* dest, uint8_t len) {
     	uint8_t n = radioSpiMaster::burstWrite(dest, len);
     	//wait until transfer finishes
     	while(radioSpiMaster::isBusy()) {
-    		//TickerTask::yield();
+    		xpcc::yield();
     	}
     	radioSpiMaster::burstRead(dest, len);
 
@@ -188,7 +189,7 @@ uint8_t Radio::spiBurstRead0(uint8_t reg, uint8_t* dest, uint8_t len) {
     	dest += n;
     }
     digitalWrite(_slaveSelectPin, HIGH);
-
+    ATOMIC_BLOCK_END;
     return status;
 
 }

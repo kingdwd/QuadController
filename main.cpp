@@ -79,18 +79,26 @@ xpcc::log::Logger xpcc::log::error(null);
 CmdTerminal terminal(usbSerial);
 //CmdTerminal ucmd(uart);
 
+void dbgset() {
+	LPC_GPIO1->FIOSET |= 1<<20;
+}
+
+void dbgclr() {
+	LPC_GPIO1->FIOCLR |= 1<<20;
+}
+
 void idle() {
 	//test::toggle();
 	//__WFI();
 	//test::set();
-
+	dbgset();
 	static PeriodicTimer<> t(500);
 
 	if(t.isExpired()) {
 		LPC_WDT->WDFEED = 0xAA;
 		LPC_WDT->WDFEED = 0x55;
 	}
-
+	dbgclr();
 }
 
 void wd_init() {
@@ -108,7 +116,7 @@ void panic(const char* msg) {
 }
 
 extern void loop();
-class APM : xpcc::TickerTask {
+class APM final : xpcc::TickerTask {
 	void handleTick() {
 		loop();
 	}
@@ -117,12 +125,15 @@ class APM : xpcc::TickerTask {
 const APM apm;
 
 int main() {
+	LPC_GPIO1->FIODIR |= 1<<20;
 	wd_init();
 
 	NVIC_SetPriority(USB_IRQn, 10);
 	//NVIC_SetPriority(EINT3_IRQn, 2);
 	//NVIC_SetPriority(UART0_IRQn, 5);
 	//NVIC_SetPriority(I2C2_IRQn, 0);
+
+
 
 	//debugIrq = true;
 	ledRed::setOutput(true);
@@ -167,8 +178,6 @@ int main() {
 
 	//initialize eeprom
 	eeprom.initialize();
-
-
 
 	hal.init(0, 0);
 
