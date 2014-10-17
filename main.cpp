@@ -45,15 +45,23 @@ USBSerial usbSerial(0xffff, 0xf3c4);
 xpcc::IOStream stream(usbSerial);
 xpcc::NullIODevice null;
 
+BufferedUart<Uart3> uartGps(115200, 256, 16);
 BufferedUart<Uart0> uart0(115200, 512, 128);
 IODeviceWrapper<Uart0> uart0raw;
 
-XpccHAL::UARTDriver uartADriver(&usbSerial);
-XpccHAL::UARTDriver uartBDriver(0);
+XpccHAL::UARTDriver uartADriver(0);
+XpccHAL::UARTDriver uartBDriver(&uartGps);
 XpccHAL::UARTDriver uartCDriver(&radio);
 XpccHAL::UARTDriver uartDDriver(0);
 XpccHAL::UARTDriver uartEDriver(0);
 XpccHAL::UARTDriver uartConsoleDriver(&usbSerial);
+
+void XpccHAL::UARTDriver::setBaud(uint32_t baud, xpcc::IODevice* device) {
+	if(device == &uartGps) {
+		XPCC_LOG_DEBUG .printf("baud %d\n", baud);
+		//uartGps.setBaud(baud);
+	}
+}
 
 #ifdef _DEBUG
 xpcc::log::Logger xpcc::log::info(usbSerial);
@@ -99,6 +107,7 @@ void idle() {
 		LPC_WDT->WDFEED = 0x55;
 	}
 	dbgclr();
+
 }
 
 void set_wd_timeout(uint32_t seconds) {
@@ -177,6 +186,10 @@ int main() {
 	//set uart0 pins
 	Pinsel::setFunc(0, 2, 1);
 	Pinsel::setFunc(0, 3, 1);
+
+	//set uart3(gps) pins
+	Pinsel::setFunc(0, 0, 2);
+	Pinsel::setFunc(0, 1, 2);
 
 	usbConnPin::setOutput(true);
 	usbSerial.connect();

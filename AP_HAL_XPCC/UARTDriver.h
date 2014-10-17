@@ -26,6 +26,8 @@ public:
     size_t write(uint8_t c);
     size_t write(const uint8_t *buffer, size_t size);
 
+    static void setBaud(uint32_t baud, xpcc::IODevice* device);
+
 private:
     bool _blocking_writes;
     xpcc::IODevice* _device;

@@ -13,11 +13,15 @@ UARTDriver::UARTDriver(xpcc::IODevice* device) :
 }
 
 void UARTDriver::begin(uint32_t b) {
-
+	if(_device)
+		setBaud(b, _device);
 }
+
 void UARTDriver::begin(uint32_t b, uint16_t rxS, uint16_t txS) {
-
+	if(_device)
+		setBaud(b, _device);
 }
+
 void UARTDriver::end() {
 
 }

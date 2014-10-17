@@ -142,7 +142,7 @@
 									<listOptionValue builtIn="false" value="CONFIG_HAL_BOARD=HAL_BOARD_XPCC"/>
 									<listOptionValue builtIn="false" value="MAG_BOARD_ORIENTATION=ROTATION_NONE"/>
 								</option>
-								<option id="gnu.cpp.compiler.option.optimization.flags.1359951643" name="Other optimization flags" superClass="gnu.cpp.compiler.option.optimization.flags" useByScannerDiscovery="false" value="-fsingle-precision-constant -fno-rtti -fno-exceptions -flto" valueType="string"/>
+								<option id="gnu.cpp.compiler.option.optimization.flags.1359951643" name="Other optimization flags" superClass="gnu.cpp.compiler.option.optimization.flags" useByScannerDiscovery="false" value="-fsingle-precision-constant -fno-rtti -fno-exceptions -mslow-flash-data" valueType="string"/>
 								<option id="gnu.cpp.compiler.option.dialect.std.1853116683" name="Language standard" superClass="gnu.cpp.compiler.option.dialect.std" useByScannerDiscovery="true" value="gnu.cpp.compiler.dialect.default" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.dialect.flags.1942650169" name="Other dialect flags" superClass="gnu.cpp.compiler.option.dialect.flags" useByScannerDiscovery="true" value="-std=gnu++11" valueType="string"/>
 								<option id="gnu.cpp.compiler.option.debugging.other.2059982421" name="Other debugging flags" superClass="gnu.cpp.compiler.option.debugging.other" useByScannerDiscovery="false" value="" valueType="string"/>
@@ -194,13 +194,13 @@
 					</folderInfo>
 					<fileInfo id="cdt.managedbuild.config.gnu.cross.exe.release.735040115.1895538746" name="rh_compat.cpp" rcbsApplicability="disable" resourcePath="rh_compat.cpp" toolsToInvoke="cdt.managedbuild.tool.gnu.cross.cpp.compiler.734776083.811407053">
 						<tool id="cdt.managedbuild.tool.gnu.cross.cpp.compiler.734776083.811407053" name="Cross G++ Compiler" superClass="cdt.managedbuild.tool.gnu.cross.cpp.compiler.734776083">
-							<option id="gnu.cpp.compiler.option.optimization.flags.2026767699" name="Other optimization flags" superClass="gnu.cpp.compiler.option.optimization.flags" value="-fsingle-precision-constant -fno-rtti -fno-exceptions -flto" valueType="string"/>
+							<option id="gnu.cpp.compiler.option.optimization.flags.2026767699" name="Other optimization flags" superClass="gnu.cpp.compiler.option.optimization.flags" value="-fsingle-precision-constant -fno-rtti -fno-exceptions -mslow-flash-data" valueType="string"/>
 							<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1194389251" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 						</tool>
 					</fileInfo>
 					<fileInfo id="cdt.managedbuild.config.gnu.cross.exe.release.735040115.511796381" name="fault.cpp" rcbsApplicability="disable" resourcePath="fault.cpp" toolsToInvoke="cdt.managedbuild.tool.gnu.cross.cpp.compiler.734776083.1601591407">
 						<tool id="cdt.managedbuild.tool.gnu.cross.cpp.compiler.734776083.1601591407" name="Cross G++ Compiler" superClass="cdt.managedbuild.tool.gnu.cross.cpp.compiler.734776083">
-							<option id="gnu.cpp.compiler.option.optimization.flags.820179005" name="Other optimization flags" superClass="gnu.cpp.compiler.option.optimization.flags" value="-fsingle-precision-constant -fno-rtti -fno-exceptions -flto" valueType="string"/>
+							<option id="gnu.cpp.compiler.option.optimization.flags.820179005" name="Other optimization flags" superClass="gnu.cpp.compiler.option.optimization.flags" value="-fsingle-precision-constant -fno-rtti -fno-exceptions -mslow-flash-data" valueType="string"/>
 							<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1628367988" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 						</tool>
 					</fileInfo>
