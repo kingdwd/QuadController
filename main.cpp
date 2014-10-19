@@ -45,7 +45,7 @@ USBSerial usbSerial(0xffff, 0xf3c4);
 xpcc::IOStream stream(usbSerial);
 xpcc::NullIODevice null;
 
-BufferedUart<Uart3> uartGps(115200, 256, 16);
+BufferedUart<Uart3> uartGps(38400, 16, 256);
 BufferedUart<Uart0> uart0(115200, 512, 128);
 IODeviceWrapper<Uart0> uart0raw;
 
