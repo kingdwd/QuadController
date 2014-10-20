@@ -27,6 +27,7 @@ void Radio::handleInit() {
 	freq.load();
 	modemCfg.load();
 	txPow.load();
+	fhChannels.load();
 
 	setFHStepSize(10);
 	setFrequency(freq.get(), 0.05f);

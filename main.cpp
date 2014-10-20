@@ -49,7 +49,7 @@ BufferedUart<Uart3> uartGps(38400, 16, 256);
 BufferedUart<Uart0> uart0(115200, 512, 128);
 IODeviceWrapper<Uart0> uart0raw;
 
-XpccHAL::UARTDriver uartADriver(0);
+XpccHAL::UARTDriver uartADriver(&usbSerial);
 XpccHAL::UARTDriver uartBDriver(&uartGps);
 XpccHAL::UARTDriver uartCDriver(&radio);
 XpccHAL::UARTDriver uartDDriver(0);
@@ -58,8 +58,7 @@ XpccHAL::UARTDriver uartConsoleDriver(&usbSerial);
 
 void XpccHAL::UARTDriver::setBaud(uint32_t baud, xpcc::IODevice* device) {
 	if(device == &uartGps) {
-		XPCC_LOG_DEBUG .printf("baud %d\n", baud);
-		//uartGps.setBaud(baud);
+		uartGps.setBaud(baud);
 	}
 }
 
