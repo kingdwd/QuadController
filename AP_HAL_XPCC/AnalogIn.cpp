@@ -16,6 +16,7 @@ float AnalogSource::read_average() {
 }
 
 float AnalogSource::voltage_average() {
+	//hal.console->printf("%d %d \n", ADC::getData(4), ADC::getData(5));
     return _voltage_avg;
 }
 

@@ -49,7 +49,7 @@ BufferedUart<Uart3> uartGps(38400, 16, 256);
 BufferedUart<Uart0> uart0(115200, 512, 128);
 IODeviceWrapper<Uart0> uart0raw;
 
-XpccHAL::UARTDriver uartADriver(&usbSerial);
+XpccHAL::UARTDriver uartADriver(0);
 XpccHAL::UARTDriver uartBDriver(&uartGps);
 XpccHAL::UARTDriver uartCDriver(&radio);
 XpccHAL::UARTDriver uartDDriver(0);
@@ -130,9 +130,15 @@ void panic(const char* msg) {
 extern void setup();
 extern void loop();
 
+bool apm_initialized = false;
 class APM final : xpcc::TickerTask {
 	void handleTick() {
-		loop();
+		if(!apm_initialized) {
+			setup();
+			apm_initialized = true;
+		} else {
+			loop();
+		}
 	}
 };
 
@@ -179,7 +185,7 @@ int main() {
 	Pinsel::setFunc(0, 11, 2); //I2C2
 /////
 
-	lpc17::ADC::init();
+	lpc17::ADC::init(10000);
 	lpc17::ADC::burstMode(true);
 
 	//set uart0 pins
@@ -197,8 +203,6 @@ int main() {
 	eeprom.initialize();
 
 	hal.init(0, 0);
-
-	setup();
 
 	set_wd_timeout(1);
 	TickerTask::tasksRun(idle);
