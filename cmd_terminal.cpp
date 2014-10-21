@@ -8,39 +8,18 @@
 #include "cmd_terminal.hpp"
 #include "eeprom/eeprom.hpp"
 #include "radio.hpp"
-#include "QuadController.hpp"
+#include <xpcc/architecture.hpp>
 #include <xpcc/architecture/peripheral/i2c_adapter.hpp>
 
 extern uint32_t crashData[3];
 
 extern const AP_HAL::HAL& hal;
 
+using namespace xpcc;
+using namespace xpcc::lpc17;
+
 void CmdTerminal::handleCommand(uint8_t nargs, char* argv[]) {
-//	if (cmp(argv[0], "quad")) {
-//		qController.handleCommand(*this, nargs, argv);
-//	}
-
-	if (cmp(argv[0], "wrap")) {
-		LPC_TIM0->TC = 4000000000;
-
-	} else
-	if (cmp(argv[0], "hpid")) {
-		float kp = 0;
-		float kd = 0;
-		float ki = 0;
-		float max = 0.2;
-
-		kp = toFloat(argv[1]);
-		ki = toFloat(argv[2]);
-		kd = toFloat(argv[3]);
-		max = toFloat(argv[4]);
-
-		ios.printf("Height PID Kp=%.3f Ki=%.3f Kd=%.3f max=%.3f\n", kp, ki, kd,
-				max);
-
-		//qController.setHeightPID(kp, ki, kd, max, true);
-
-	} else if (cmp(argv[0], "erase")) {
+	if (cmp(argv[0], "erase")) {
 		ios.printf("Erasing eeprom\n");
 		uint8_t t = argv[1][0];
 
@@ -102,45 +81,6 @@ void CmdTerminal::handleCommand(uint8_t nargs, char* argv[]) {
 
 	}
 
-	else if (cmp(argv[0], "throttle")) {
-		float t = toInt(argv[1]) / 100.0;
-		//qController.throttle = t;
-	}
-
-	else if (cmp(argv[0], "arm")) {
-		if (cmp(argv[1], "true")) {
-			//qController.arm(true);
-		} else {
-			//qController.arm(false);
-		}
-	}
-
-	else if (cmp(argv[0], "speed")) {
-		float spd[4];
-		spd[0] = toInt(argv[1]) / 100.0;
-		spd[1] = toInt(argv[2]) / 100.0;
-		spd[2] = toInt(argv[3]) / 100.0;
-		spd[3] = toInt(argv[4]) / 100.0;
-
-		ios.printf("Motor speed (%.2f,%.2f,%.2f,%.2f)\n", spd[0], spd[1],
-				spd[2], spd[3]);
-		//qController.setMotorOutput(spd);
-	}
-
-	else if (cmp(argv[0], "zero")) {
-		ios.printf("Zeroing sensors\n");
-		//qController.zero();
-	}
-
-	//		else if(cmp(argv[0], "baro")) {
-	//			if(!qController.baro.initialize(0x77)) {
-	//				XPCC_LOG_DEBUG .printf("baro init failed\n");
-	//			} else {
-	//				XPCC_LOG_DEBUG .printf("baro init OK\n");
-	//			}
-	//			XPCC_LOG_DEBUG .dump_buffer((uint8_t*)&qController.baro.calReg, sizeof(qController.baro.calReg));
-	//		}
-
 	else if (cmp(argv[0], "scan")) {
 		xpcc::I2cWriteAdapter adapter;
 
@@ -165,19 +105,8 @@ void CmdTerminal::handleCommand(uint8_t nargs, char* argv[]) {
 	else if (cmp(argv[0], "flash")) {
 		LPC_WDT->WDMOD = 0x03;
 		LPC_WDT->WDFEED = 0xFF;
-	} else if (cmp(argv[0], "compass_stop")) {
-
-		//qController.mag.stopCalibration();
-	} else if (cmp(argv[0], "compass_start")) {
-
-		//qController.mag.startCalibration();
 	}
 
-	else if (cmp(argv[0], "sendData")) {
-
-		radio.write((uint8_t*)"labas labas\n", 12);
-
-	}
 	else if(cmp(argv[0], "eeread")) {
 		uint16_t addr = toInt(argv[1]);
 

@@ -11,15 +11,8 @@
 #include <xpcc/architecture.hpp>
 #include <xpcc/math/filter.hpp>
 #include <math.h>
-
-#include "sensors/FXOS8700.hpp"
-
-#include "sensors/MotionDriver/inv_mpu_dmp_motion_driver.h"
-#include "sensors/MotionDriver/inv_mpu.h"
 #include "pindefs.hpp"
-#include "Ultrasonic.hpp"
 #include "eeprom/eedata.hpp"
-#include "sensors/ms5611.hpp"
 
 using namespace xpcc;
 
