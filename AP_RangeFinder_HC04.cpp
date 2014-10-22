@@ -127,9 +127,9 @@ private:
 		if(irqn == TIMER0_IRQn) {
 			if(Timer0::getIntStatus(Timer0::IntType::TIM_CR0_INT)) {
 				if(snd_echo::read()) {
-					micros_start = Timer0::getCounterValue();
+					micros_start = Timer0::getCaptureValue(0);
 				} else {
-					micros_end = Timer0::getCounterValue();
+					micros_end = Timer0::getCaptureValue(0);
 				}
 				Timer0::clearIntPending(Timer0::IntType::TIM_CR0_INT);
 			}
