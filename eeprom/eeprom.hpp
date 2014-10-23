@@ -22,11 +22,11 @@ public:
 	virtual ~Eeprom(){};
 
 	void initialize()  {
-		readByte(0, token);
-
-		if(token != TOKEN) {
-			write(0, (uint8_t*)&eeDefaults, sizeof(eeDefaults));
-		}
+//		readByte(0, token);
+//
+//		if(token != TOKEN) {
+//			write(0, (uint8_t*)&eeDefaults, sizeof(eeDefaults));
+//		}
 	}
 
 	template <typename T, typename U, typename Y>

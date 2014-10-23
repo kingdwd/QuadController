@@ -37,6 +37,7 @@ void CmdTerminal::handleCommand(uint8_t nargs, char* argv[]) {
 		printf("Freq: %d\n", radio.freq.get());
 		printf("modemCfg: %d\n", radio.modemCfg);
 		printf("FH channels: %d\n", radio.fhChannels);
+		printf("TXPow: %d\n", radio.txPow);
 
 		//XPCC_LOG_DEBUG .printf("%d\n", qController.mpu.getAccelerationZ());
 	} else if (cmp(argv[0], "freq")) {
