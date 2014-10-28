@@ -16,6 +16,7 @@ const AP_Param::GroupInfo Radio::var_info[] {
 	    AP_GROUPINFO("FH_CHANS", 1, Radio, fhChannels, 4),
 	    AP_GROUPINFO("MODEM_CFG", 2, Radio, modemCfg, 18),
 	    AP_GROUPINFO("MAX_FRAGM", 3, Radio, maxFragment, 64),
+	    AP_GROUPINFO("TX_POWER", 4, Radio, txPow, 0),
 	    AP_GROUPEND
 };
 
@@ -80,12 +81,12 @@ void Radio::handleTick() {
 						setFrequency(cfg->frequency, cfg->afcPullIn);
 					}
 
-					if (cfg->modemCfg != modemCfg) {
+					if (cfg->modemCfg != modemCfg.get()) {
 						setModemConfig((RH_RF22::ModemConfigChoice) cfg->modemCfg);
 					}
 
-					if (txPow != cfg->txPower) {
-						setTxPower(txPow);
+					if (txPow.get() != cfg->txPower) {
+						setTxPower(cfg->txPower);
 					}
 
 					fhChannels.set_and_save_ifchanged(cfg->fhChannels);
