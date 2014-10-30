@@ -53,13 +53,21 @@ XpccHAL::UARTDriver uartADriver(0);
 XpccHAL::UARTDriver uartBDriver(&uartGps);
 XpccHAL::UARTDriver uartCDriver(&radio);
 XpccHAL::UARTDriver uartDDriver(0);
-XpccHAL::UARTDriver uartEDriver(0);
+XpccHAL::UARTDriver uartEDriver(&uart0);
 XpccHAL::UARTDriver uartConsoleDriver(&usbSerial);
 
 void XpccHAL::UARTDriver::setBaud(uint32_t baud, xpcc::IODevice* device) {
 	if(device == &uartGps) {
 		uartGps.setBaud(baud);
 	}
+}
+
+XpccHAL::UARTDriver::flow_control XpccHAL::UARTDriver::get_flow_control(xpcc::IODevice* device) {
+	if(device == &radio) {
+		return XpccHAL::UARTDriver::flow_control::FLOW_CONTROL_ENABLE;
+	}
+
+	return XpccHAL::UARTDriver::flow_control::FLOW_CONTROL_DISABLE;
 }
 
 #ifdef _DEBUG
@@ -93,19 +101,23 @@ void dbgset() {
 void dbgclr() {
 	LPC_GPIO1->FIOCLR |= 1<<20;
 }
+void dbgtgl() {
+	LPC_GPIO1->FIOPIN ^= 1<<20;
+}
 
 void idle() {
 	//test::toggle();
 	//__WFI();
 	//test::set();
-	dbgset();
+	//dbgset();
 	static PeriodicTimer<> t(500);
 
 	if(t.isExpired()) {
 		LPC_WDT->WDFEED = 0xAA;
 		LPC_WDT->WDFEED = 0x55;
+		dbgtgl();
 	}
-	dbgclr();
+	//dbgclr();
 
 }
 
@@ -137,7 +149,9 @@ class APM final : xpcc::TickerTask {
 			setup();
 			apm_initialized = true;
 		} else {
+			//dbgset();
 			loop();
+			//dbgclr();
 		}
 	}
 };
@@ -146,13 +160,13 @@ const APM apm;
 
 int main() {
 	LPC_GPIO1->FIODIR |= 1<<20;
-	set_wd_timeout(15);
+	set_wd_timeout(6);
 	wd_init();
 
 	NVIC_SetPriority(USB_IRQn, 4);
 	//NVIC_SetPriority(EINT3_IRQn, 2);
 	//NVIC_SetPriority(UART0_IRQn, 5);
-	//NVIC_SetPriority(I2C2_IRQn, 0);
+
 
 	//debugIrq = true;
 	ledRed::setOutput(true);

@@ -58,7 +58,8 @@ void CmdTerminal::handleCommand(uint8_t nargs, char* argv[]) {
 		xpcc::I2cWriteReadAdapter adapter;
 		adapter.initialize(addr, buf, 1, buf, 1);
 
-		I2cMaster2::startBlocking(&adapter);
+		I2cMaster2::start(&adapter);
+		while(adapter.isBusy());
 
 		ios.printf("status:%d, value: %x\n", I2cMaster2::getErrorState(),
 				buf[0]);
@@ -75,7 +76,8 @@ void CmdTerminal::handleCommand(uint8_t nargs, char* argv[]) {
 		xpcc::I2cWriteReadAdapter adapter;
 		adapter.initialize(addr, buf, 2, buf, 0);
 
-		I2cMaster2::startBlocking(&adapter);
+		I2cMaster2::start(&adapter);
+		while(adapter.isBusy());
 
 		ios.printf("status:%d, value: %x\n", I2cMaster2::getErrorState(),
 				buf[0]);
@@ -90,7 +92,8 @@ void CmdTerminal::handleCommand(uint8_t nargs, char* argv[]) {
 		XPCC_LOG_DEBUG << "Scanning i2c bus\n";
 		for (int i = 0; i < 128; i++) {
 			adapter.initialize(i, buf, 1);
-			I2cMaster2::startBlocking(&adapter);
+			I2cMaster2::start(&adapter);
+			while(adapter.isBusy());
 
 			if (I2cMaster2::getErrorState()
 					!= xpcc::I2cMaster::Error::AddressNack) {

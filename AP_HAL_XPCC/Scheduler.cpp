@@ -29,9 +29,7 @@ void Scheduler::init(void* machtnichts)
 
 void Scheduler::delay(uint16_t ms)
 {
-
 	uint32_t start = micros();
-
     while (ms > 0) {
         while ((micros() - start) >= 1000) {
             ms--;
@@ -73,7 +71,9 @@ uint32_t Scheduler::micros() {
 void Scheduler::delay_microseconds(uint16_t us)
 {
 	uint32_t m = micros() + us;
-	while(micros() < m);
+	while(micros() < m) {
+		xpcc::yield();
+	}
 }
 
 void Scheduler::register_delay_callback(AP_HAL::Proc k,

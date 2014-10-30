@@ -27,6 +27,7 @@ public:
     size_t write(const uint8_t *buffer, size_t size);
 
     static void setBaud(uint32_t baud, xpcc::IODevice* device);
+    static enum flow_control get_flow_control(xpcc::IODevice* device);
 
 private:
     bool _blocking_writes;

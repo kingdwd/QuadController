@@ -7,7 +7,7 @@
 #include <xpcc/architecture/peripheral/i2c_adapter.hpp>
 
 
-class XpccHAL::I2CDriver : public AP_HAL::I2CDriver {
+class XpccHAL::I2CDriver : public AP_HAL::I2CDriver, xpcc::I2cWriteReadAdapter {
 public:
     I2CDriver(AP_HAL::Semaphore* semaphore) : _semaphore(semaphore) {}
     void begin();
@@ -33,13 +33,20 @@ public:
     uint8_t readRegisters(uint8_t addr, uint8_t reg,
                                   uint8_t len, uint8_t* data);
 
+    bool readNonblocking(uint8_t addr, uint8_t reg,
+                                  uint8_t len, uint8_t* data,
+								  AP_HAL::MemberProc callback);
+
     uint8_t lockup_count();
 
     AP_HAL::Semaphore* get_semaphore() { return _semaphore; }
 
 private:
     AP_HAL::Semaphore* _semaphore;
-    xpcc::I2cWriteReadAdapter adapter;
+    AP_HAL::MemberProc nb_callback;
+    volatile bool nb_transaction;
+
+    void stopped(DetachCause cause) override;
 };
 
 #endif // __AP_HAL_EMPTY_I2CDRIVER_H__
