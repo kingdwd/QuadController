@@ -36,14 +36,14 @@ uint16_t RCInput::read(uint8_t ch) {
 
 	//if radio link is lost for 500ms center axes
 	if(xpcc::Clock::now() - radio.rcPacketTimestamp > 500) {
-		radio.rcData.rollCh = 1500;
-		radio.rcData.pitchCh = 1500;
-		radio.rcData.yawCh = 1500;
+		radio.rcData.rollCh = 512;
+		radio.rcData.pitchCh = 512;
+		radio.rcData.yawCh = 512;
 	}
 
 	//if radio link is lost for 2s, trigger throttle failsafe
 	if(xpcc::Clock::now() - radio.rcPacketTimestamp > 1500) {
-		radio.rcData.throttleCh = 900;
+		radio.rcData.throttleCh = -100;
 	}
 
 	uint16_t val = 0;
