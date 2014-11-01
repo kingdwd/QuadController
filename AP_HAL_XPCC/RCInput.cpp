@@ -43,7 +43,7 @@ uint16_t RCInput::read(uint8_t ch) {
 
 	//if radio link is lost for 2s, trigger throttle failsafe
 	if(xpcc::Clock::now() - radio.rcPacketTimestamp > 1500) {
-		radio.rcData.throttleCh = 0;
+		radio.rcData.throttleCh = 900;
 	}
 
 	uint16_t val = 0;
