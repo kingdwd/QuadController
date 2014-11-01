@@ -58,7 +58,9 @@ void CmdTerminal::handleCommand(uint8_t nargs, char* argv[]) {
 		xpcc::I2cWriteReadAdapter adapter;
 		adapter.initialize(addr, buf, 1, buf, 1);
 
-		I2cMaster2::start(&adapter);
+		if(!I2cMaster2::start(&adapter)) {
+			ios.printf("failed to start\n");
+		}
 		while(adapter.isBusy());
 
 		ios.printf("status:%d, value: %x\n", I2cMaster2::getErrorState(),
