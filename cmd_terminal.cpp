@@ -18,20 +18,11 @@ extern const AP_HAL::HAL& hal;
 using namespace xpcc;
 using namespace xpcc::lpc17;
 
+extern void sdread(int b);
+
 void CmdTerminal::handleCommand(uint8_t nargs, char* argv[]) {
-	if (cmp(argv[0], "erase")) {
-		ios.printf("Erasing eeprom\n");
-		uint8_t t = argv[1][0];
-
-		if(I2cMaster2::isBusy()) {
-			printf("busy\n");
-		}
-		if(eeprom.put(&EEData::token, t)) printf("put ok\n");
-		t = 0;
-		eeprom.readByte(0, t);
-		ios.printf("%d\n", t);
-	} else if (cmp(argv[0], "test")) {
-
+	if (cmp(argv[0], "test")) {
+		sdread(atol(argv[1]));
 		//XPCC_LOG_DEBUG .printf("%d\n", qController.mpu.getAccelerationZ());
 	} else if (cmp(argv[0], "radio")) {
 		printf("Freq: %d\n", radio.freq.get());

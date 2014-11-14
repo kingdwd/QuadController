@@ -28,6 +28,9 @@
 #include "radio.hpp"
 #include "AP_HAL_XPCC/UARTDriver.h"
 
+#include "sd/SDCardVolume.hpp"
+#include "sd/USBMSD_SDHandler.hpp"
+
 extern const AP_HAL::HAL& hal;
 
 using namespace xpcc;
@@ -35,25 +38,28 @@ using namespace xpcc::lpc17;
 
 const char fwversion[16] __attribute__((used, section(".fwversion"))) = "QuadV0.4";
 
+SDCardVolume<SpiMaster1, sdSel> sdCard;
+fat::FileSystem fs(&sdCard);
 
-#define _DEBUG
-//#define _SER_DEBUG
+//#define _DEBUG
+#define _SER_DEBUG
 //UARTDevice uart(460800);
 
 Radio radio;
-USBSerial usbSerial(0xffff, 0xf3c4);
+USBCDCMSD<USBMSD_SDHandler<typeof(sdCard)>> usbSerial(0xffff, 0xf3c4, 0);
+
 xpcc::IOStream stream(usbSerial);
 xpcc::NullIODevice null;
 
 BufferedUart<Uart3> uartGps(38400, 16, 256);
-BufferedUart<Uart0> uart0(115200, 512, 128);
+BufferedUart<Uart0> uart0(460800, 512, 128);
 IODeviceWrapper<Uart0> uart0raw;
 
 XpccHAL::UARTDriver uartADriver(0);
 XpccHAL::UARTDriver uartBDriver(&uartGps);
 XpccHAL::UARTDriver uartCDriver(&radio);
 XpccHAL::UARTDriver uartDDriver(0);
-XpccHAL::UARTDriver uartEDriver(&uart0);
+XpccHAL::UARTDriver uartEDriver(0);
 XpccHAL::UARTDriver uartConsoleDriver(&usbSerial);
 
 void XpccHAL::UARTDriver::setBaud(uint32_t baud, xpcc::IODevice* device) {
@@ -77,10 +83,10 @@ xpcc::log::Logger xpcc::log::error(uart0raw);
 xpcc::log::Logger xpcc::log::warning(usbSerial);
 #else
 #ifdef _SER_DEBUG
-xpcc::log::Logger xpcc::log::info(uart);
-xpcc::log::Logger xpcc::log::debug(uart);
-xpcc::log::Logger xpcc::log::error(uart);
-xpcc::log::Logger xpcc::log::warning(uart);
+xpcc::log::Logger xpcc::log::info(uart0);
+xpcc::log::Logger xpcc::log::debug(uart0);
+xpcc::log::Logger xpcc::log::error(uart0raw);
+xpcc::log::Logger xpcc::log::warning(uart0);
 #else
 xpcc::log::Logger xpcc::log::info(null);
 xpcc::log::Logger xpcc::log::debug(null);
@@ -89,6 +95,19 @@ xpcc::log::Logger xpcc::log::error(null);
 #endif
 
 
+void sdread(int block) {
+	XPCC_LOG_DEBUG .printf("test\n");
+
+	auto file_wr = new xpcc::fat::File;
+	FRESULT res;
+	if((res = file_wr->open("1.BIN", "w")) != FR_OK) {
+		XPCC_LOG_INFO .printf("failed to open log %d\n", res);
+	}
+
+	*file_wr << "Hello\n";
+	file_wr->close();
+	delete file_wr;
+}
 
 
 CmdTerminal terminal(usbSerial);
@@ -115,7 +134,6 @@ void idle() {
 	if(t.isExpired()) {
 		LPC_WDT->WDFEED = 0xAA;
 		LPC_WDT->WDFEED = 0x55;
-		dbgtgl();
 	}
 	//dbgclr();
 
@@ -158,15 +176,26 @@ class APM final : xpcc::TickerTask {
 
 const APM apm;
 
+void dmaerr() {
+	XPCC_LOG_DEBUG .printf("dma error\n");
+}
+
 int main() {
+	//set uart0 pins
+	Pinsel::setFunc(0, 2, 1);
+	Pinsel::setFunc(0, 3, 1);
+	usbConnPin::setOutput(false);
+
+	XPCC_LOG_DEBUG .printf("---- starting -----\n");
+
 	LPC_GPIO1->FIODIR |= 1<<20;
 	set_wd_timeout(6);
 	wd_init();
 
 	NVIC_SetPriority(USB_IRQn, 4);
+	NVIC_SetPriority(DMA_IRQn, 5);
 	//NVIC_SetPriority(EINT3_IRQn, 2);
 	//NVIC_SetPriority(UART0_IRQn, 5);
-
 
 	//debugIrq = true;
 	ledRed::setOutput(true);
@@ -178,11 +207,18 @@ int main() {
 	//lpc17::SysTickTimer::attachInterrupt(sysTick);
 
 /////
-	SpiMaster1::initialize(SpiMaster1::Mode::MODE_0, 8000000);
+	SpiMaster1::initialize(SpiMaster1::Mode::MODE_0, 1000000);
 	Pinsel::setFunc(0, 7, 2); //SCK1
 	Pinsel::setFunc(0, 8, 2); //MISO1
 	Pinsel::setFunc(0, 9, 2); //MOSI1
 /////
+
+	if(sdCard.initialise()) {
+		usbSerial.msd.assignCard(sdCard);
+		fs.mount();
+	} else {
+		XPCC_LOG_ERROR .printf("SD init failed\n");
+	}
 
 /////
 	SpiMaster0::initialize(SpiMaster0::Mode::MODE_0, 8000000);
@@ -202,16 +238,13 @@ int main() {
 	lpc17::ADC::init(10000);
 	lpc17::ADC::burstMode(true);
 
-	//set uart0 pins
-	Pinsel::setFunc(0, 2, 1);
-	Pinsel::setFunc(0, 3, 1);
-
 	//set uart3(gps) pins
 	Pinsel::setFunc(0, 0, 2);
 	Pinsel::setFunc(0, 1, 2);
 
-	usbConnPin::setOutput(true);
+
 	usbSerial.connect();
+	usbConnPin::set();
 
 	//initialize eeprom
 	eeprom.initialize();
