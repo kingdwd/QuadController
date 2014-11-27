@@ -15,20 +15,20 @@
 
 GPIO__OUTPUT(usbConnPin, 1, 18);
 
-GPIO__OUTPUT(ledRed, 0, 25);
-GPIO__OUTPUT(ledGreen, 0, 26);
+GPIO__OUTPUT(ledRed, 1, 1);
+GPIO__OUTPUT(ledGreen, 1, 4);
+GPIO__OUTPUT(ledBlue, 1, 0);
 
 GPIO__OUTPUT(usnd0_trig, 1, 28);
 GPIO__INPUT(usnd0_echo, 0, 0);
 
-//GPIO__OUTPUT(radioRst, 4, 28);
-GPIO__OUTPUT(sdSel, 2, 0);
-//GPIO__IO(radioSlpTr, 0, 6);
-//GPIO__INPUT(radioIrq, 2, 1);
+GPIO__OUTPUT(sdSel, 0, 6);
 
 //si4432 radio
 GPIO__IO(radio_sel, 0, 16);
 GPIO__IO(radio_irq, 0, 22);
+
+GPIO__INPUT(mpu_irq, 2, 6);
 
 typedef xpcc::lpc17::SpiMaster0 radioSpiMaster;
 

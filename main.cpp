@@ -28,8 +28,8 @@
 #include "radio.hpp"
 #include "AP_HAL_XPCC/UARTDriver.h"
 
-#include "sd/SDCardVolume.hpp"
-#include "sd/USBMSD_SDHandler.hpp"
+#include <xpcc/driver/storage/sd/SDCardVolume.hpp>
+#include <xpcc/driver/storage/sd/USBMSD_SDHandler.hpp>
 
 extern const AP_HAL::HAL& hal;
 
@@ -163,6 +163,7 @@ extern void loop();
 bool apm_initialized = false;
 class APM final : xpcc::TickerTask {
 	void handleTick() {
+		dbgtgl();
 		if(!apm_initialized) {
 			setup();
 			apm_initialized = true;
@@ -175,10 +176,6 @@ class APM final : xpcc::TickerTask {
 };
 
 const APM apm;
-
-void dmaerr() {
-	XPCC_LOG_DEBUG .printf("dma error\n");
-}
 
 int main() {
 	//set uart0 pins
@@ -193,9 +190,10 @@ int main() {
 	wd_init();
 
 	NVIC_SetPriority(USB_IRQn, 4);
-	NVIC_SetPriority(DMA_IRQn, 5);
+	NVIC_SetPriority(DMA_IRQn, 3);
+	NVIC_SetPriority(I2C2_IRQn, 2);
 	//NVIC_SetPriority(EINT3_IRQn, 2);
-	//NVIC_SetPriority(UART0_IRQn, 5);
+	NVIC_SetPriority(UART0_IRQn, 5);
 
 	//debugIrq = true;
 	ledRed::setOutput(true);
