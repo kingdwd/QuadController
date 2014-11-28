@@ -135,6 +135,8 @@ void idle() {
 		LPC_WDT->WDFEED = 0xAA;
 		LPC_WDT->WDFEED = 0x55;
 	}
+
+	ledRed::toggle();
 	//dbgclr();
 
 }
@@ -175,7 +177,41 @@ class APM final : xpcc::TickerTask {
 	}
 };
 
-const APM apm;
+
+class Test : xpcc::CoopTask {
+public:
+	Test() : xpcc::CoopTask(stk, 512) {}
+
+	void run() {
+		while(1) {
+			XPCC_LOG_ERROR .printf("aaaaa\n");
+			xpcc::sleep(100);
+			ledBlue::toggle();
+			XPCC_LOG_ERROR .printf("bbbbb\n");
+			xpcc::sleep(100);
+		}
+	}
+	uint32_t stk[512/4];
+};
+
+class MainTest : public xpcc::TickerTask {
+protected:
+	void handleInit() {
+
+	}
+	void handleTick() {
+		XPCC_LOG_DEBUG .printf("c %x\n", __get_CONTROL());
+		xpcc::sleep(1000);
+	}
+};
+
+//CoopWrapper<MainTest, 512> testas;
+//MainTest test;
+Test testTask;
+//Test test2;
+
+
+//const APM apm;
 
 int main() {
 	//set uart0 pins
@@ -194,10 +230,12 @@ int main() {
 	NVIC_SetPriority(I2C2_IRQn, 2);
 	//NVIC_SetPriority(EINT3_IRQn, 2);
 	NVIC_SetPriority(UART0_IRQn, 5);
+	NVIC_SetPriority(PendSV_IRQn, 10);
 
 	//debugIrq = true;
 	ledRed::setOutput(true);
 	ledGreen::setOutput(true);
+	ledBlue::setOutput(0);
 
 	lpc17::RitClock::initialize();
 

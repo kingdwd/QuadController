@@ -21,6 +21,9 @@ using namespace xpcc::lpc17;
 extern void sdread(int b);
 
 void CmdTerminal::handleCommand(uint8_t nargs, char* argv[]) {
+	if (cmp(argv[0], "tasks")) {
+		printTasks(xpcc::log::debug);
+	}
 	if (cmp(argv[0], "test")) {
 		sdread(atol(argv[1]));
 		//XPCC_LOG_DEBUG .printf("%d\n", qController.mpu.getAccelerationZ());
