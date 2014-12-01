@@ -137,7 +137,7 @@ void idle() {
 	}
 
 	ledRed::toggle();
-	//dbgclr();
+	dbgtgl();
 
 }
 
@@ -165,7 +165,7 @@ extern void loop();
 bool apm_initialized = false;
 class APM final : xpcc::TickerTask {
 	void handleTick() {
-		dbgtgl();
+		//dbgtgl();
 		if(!apm_initialized) {
 			setup();
 			apm_initialized = true;
@@ -177,6 +177,8 @@ class APM final : xpcc::TickerTask {
 	}
 };
 
+extern void a(char* a);
+extern void b(char* b);
 
 class Test : xpcc::CoopTask {
 public:
@@ -184,10 +186,10 @@ public:
 
 	void run() {
 		while(1) {
-			XPCC_LOG_ERROR .printf("aaaaa\n");
+			XPCC_LOG_DEBUG .printf("aaaaa\n");
 			xpcc::sleep(100);
 			ledBlue::toggle();
-			XPCC_LOG_ERROR .printf("bbbbb\n");
+			XPCC_LOG_DEBUG .printf("bbbbb\n");
 			xpcc::sleep(100);
 		}
 	}
@@ -200,8 +202,13 @@ protected:
 
 	}
 	void handleTick() {
-		XPCC_LOG_DEBUG .printf("c %x\n", __get_CONTROL());
-		xpcc::sleep(1000);
+		static PeriodicTimer<> t(200);
+		if(t.isExpired()) {
+			XPCC_LOG_DEBUG .printf("aaaaaaaaaaaa\n");
+			XPCC_LOG_DEBUG .printf("aaaaaaaaaaaa\n");
+			XPCC_LOG_DEBUG .printf("aaaaaaaaaaaa\n");
+		}
+
 	}
 };
 
@@ -230,7 +237,6 @@ int main() {
 	NVIC_SetPriority(I2C2_IRQn, 2);
 	//NVIC_SetPriority(EINT3_IRQn, 2);
 	NVIC_SetPriority(UART0_IRQn, 5);
-	NVIC_SetPriority(PendSV_IRQn, 10);
 
 	//debugIrq = true;
 	ledRed::setOutput(true);

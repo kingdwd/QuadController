@@ -110,4 +110,13 @@ void Hard_Fault_Handler(uint32_t stack[]) {
 
 }
 
+void a(char* a) {
+	XPCC_LOG_ERROR .printf("a(%s)\n", a);
+	xpcc::sleep(300);
+}
 
+void b(char *b) {
+	XPCC_LOG_ERROR .printf("b(%s)\n", b);
+	a("recursive");
+	xpcc::sleep(200);
+}
