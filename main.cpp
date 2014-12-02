@@ -177,8 +177,6 @@ class APM final : xpcc::TickerTask {
 	}
 };
 
-extern void a(char* a);
-extern void b(char* b);
 
 class Test : xpcc::CoopTask {
 public:
@@ -186,15 +184,17 @@ public:
 
 	void run() {
 		while(1) {
-			XPCC_LOG_DEBUG .printf("aaaaa\n");
+			XPCC_LOG_ERROR .printf("aaaaa\n");
 			xpcc::sleep(100);
 			ledBlue::toggle();
-			XPCC_LOG_DEBUG .printf("bbbbb\n");
+			XPCC_LOG_ERROR .printf("bbbbb\n");
 			xpcc::sleep(100);
 		}
 	}
 	uint32_t stk[512/4];
 };
+
+uint8_t buffer[512];
 
 class MainTest : public xpcc::TickerTask {
 protected:
@@ -202,12 +202,16 @@ protected:
 
 	}
 	void handleTick() {
-		static PeriodicTimer<> t(200);
-		if(t.isExpired()) {
-			XPCC_LOG_DEBUG .printf("aaaaaaaaaaaa\n");
-			XPCC_LOG_DEBUG .printf("aaaaaaaaaaaa\n");
-			XPCC_LOG_DEBUG .printf("aaaaaaaaaaaa\n");
-		}
+		Timeout<> t(200);
+
+//		SpiMaster1::transfer(0, buffer, 512);
+//		while(SpiMaster1::isTransferBusy()) {
+//			if(t.isExpired()) {
+//				XPCC_LOG_DEBUG .printf("DMA timeout\n");
+//				return;
+//			}
+//		}
+//		XPCC_LOG_DEBUG .printf("dma ok\n");
 
 	}
 };
