@@ -184,10 +184,10 @@ public:
 
 	void run() {
 		while(1) {
-			XPCC_LOG_ERROR .printf("aaaaa\n");
+			XPCC_LOG_DEBUG .printf("aaaaa\n");
 			xpcc::sleep(100);
 			ledBlue::toggle();
-			XPCC_LOG_ERROR .printf("bbbbb\n");
+			XPCC_LOG_DEBUG .printf("bbbbb %x\n", LPC_SSP1->CR0);
 			xpcc::sleep(100);
 		}
 	}
@@ -230,14 +230,14 @@ int main() {
 	Pinsel::setFunc(0, 3, 1);
 	usbConnPin::setOutput(false);
 
-	XPCC_LOG_DEBUG .printf("---- starting -----\n");
+	XPCC_LOG_DEBUG .printf("----- starting -----\n");
 
 	LPC_GPIO1->FIODIR |= 1<<20;
 	set_wd_timeout(6);
 	wd_init();
 
 	NVIC_SetPriority(USB_IRQn, 4);
-	NVIC_SetPriority(DMA_IRQn, 3);
+	NVIC_SetPriority(DMA_IRQn, 0);
 	NVIC_SetPriority(I2C2_IRQn, 2);
 	//NVIC_SetPriority(EINT3_IRQn, 2);
 	NVIC_SetPriority(UART0_IRQn, 5);
