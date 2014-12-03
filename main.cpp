@@ -45,8 +45,10 @@ fat::FileSystem fs(&sdCard);
 #define _SER_DEBUG
 //UARTDevice uart(460800);
 
+typedef CoopTask<USBMSD_VolumeHandler, 512> MSDHandler;
+
 Radio radio;
-USBCDCMSD<USBMSD_SDHandler<typeof(sdCard)>> usbSerial(0xffff, 0xf3c4, 0);
+USBCDCMSD<MSDHandler> usbSerial(0xffff, 0xf3c4, 0, sdCard);
 
 xpcc::IOStream stream(usbSerial);
 xpcc::NullIODevice null;
@@ -178,11 +180,9 @@ class APM final : xpcc::TickerTask {
 };
 
 
-class Test : xpcc::CoopTask {
+class Test : xpcc::TickerTask {
 public:
-	Test() : xpcc::CoopTask(stk, 512) {}
-
-	void run() {
+	void handleTick() {
 		while(1) {
 			XPCC_LOG_DEBUG .printf("aaaaa\n");
 			xpcc::sleep(100);
@@ -191,34 +191,12 @@ public:
 			xpcc::sleep(100);
 		}
 	}
-	uint32_t stk[512/4];
 };
 
-uint8_t buffer[512];
-
-class MainTest : public xpcc::TickerTask {
-protected:
-	void handleInit() {
-
-	}
-	void handleTick() {
-		Timeout<> t(200);
-
-//		SpiMaster1::transfer(0, buffer, 512);
-//		while(SpiMaster1::isTransferBusy()) {
-//			if(t.isExpired()) {
-//				XPCC_LOG_DEBUG .printf("DMA timeout\n");
-//				return;
-//			}
-//		}
-//		XPCC_LOG_DEBUG .printf("dma ok\n");
-
-	}
-};
 
 //CoopWrapper<MainTest, 512> testas;
 //MainTest test;
-Test testTask;
+CoopTask<Test, 512> testTask;
 //Test test2;
 
 
@@ -259,12 +237,11 @@ int main() {
 	Pinsel::setFunc(0, 9, 2); //MOSI1
 /////
 
-	if(sdCard.initialise()) {
-		usbSerial.msd.assignCard(sdCard);
-		fs.mount();
-	} else {
-		XPCC_LOG_ERROR .printf("SD init failed\n");
-	}
+//	if(sdCard.initialise()) {
+//		fs.mount();
+//	} else {
+//		XPCC_LOG_ERROR .printf("SD init failed\n");
+//	}
 
 /////
 	SpiMaster0::initialize(SpiMaster0::Mode::MODE_0, 8000000);
