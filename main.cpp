@@ -29,7 +29,7 @@
 #include "AP_HAL_XPCC/UARTDriver.h"
 
 #include <xpcc/driver/storage/sd/SDCardVolume.hpp>
-#include <xpcc/driver/storage/sd/USBMSD_SDHandler.hpp>
+#include <xpcc/driver/storage/sd/USBMSD_VolumeHandler.hpp>
 
 extern const AP_HAL::HAL& hal;
 
@@ -45,10 +45,11 @@ fat::FileSystem fs(&sdCard);
 #define _SER_DEBUG
 //UARTDevice uart(460800);
 
-typedef CoopTask<USBMSD_VolumeHandler, 512> MSDHandler;
+//typedef CoopTask<USBMSD_VolumeHandler, 512> MSDHandler;
+typedef USBMSD_VolumeHandler MSDHandler;
 
 Radio radio;
-USBCDCMSD<MSDHandler> usbSerial(0xffff, 0xf3c4, 0, sdCard);
+USBCDCMSD<MSDHandler> usbSerial(0xffff, 0xf3c4, 0, &sdCard);
 
 xpcc::IOStream stream(usbSerial);
 xpcc::NullIODevice null;
@@ -196,7 +197,7 @@ public:
 
 //CoopWrapper<MainTest, 512> testas;
 //MainTest test;
-CoopTask<Test, 512> testTask;
+//CoopTask<Test, 512> testTask;
 //Test test2;
 
 
@@ -209,6 +210,7 @@ int main() {
 	usbConnPin::setOutput(false);
 
 	XPCC_LOG_DEBUG .printf("----- starting -----\n");
+	XPCC_LOG_DEBUG .printf("sdCard %x\n", &sdCard);
 
 	LPC_GPIO1->FIODIR |= 1<<20;
 	set_wd_timeout(6);
@@ -237,11 +239,11 @@ int main() {
 	Pinsel::setFunc(0, 9, 2); //MOSI1
 /////
 
-//	if(sdCard.initialise()) {
-//		fs.mount();
-//	} else {
-//		XPCC_LOG_ERROR .printf("SD init failed\n");
-//	}
+	if(sdCard.initialise()) {
+		fs.mount();
+	} else {
+		XPCC_LOG_ERROR .printf("SD init failed\n");
+	}
 
 /////
 	SpiMaster0::initialize(SpiMaster0::Mode::MODE_0, 8000000);
