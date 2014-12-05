@@ -97,19 +97,25 @@ xpcc::log::Logger xpcc::log::error(null);
 #endif
 #endif
 
-
+uint8_t buf[512];
 void sdread(int block) {
-	XPCC_LOG_DEBUG .printf("test\n");
+	XPCC_LOG_DEBUG .printf("sd test\n");
 
-	auto file_wr = new xpcc::fat::File;
-	FRESULT res;
-	if((res = file_wr->open("1.BIN", "w")) != FR_OK) {
-		XPCC_LOG_INFO .printf("failed to open log %d\n", res);
-	}
+	memset(buf, 0, 512);
 
-	*file_wr << "Hello\n";
-	file_wr->close();
-	delete file_wr;
+	sdCard.doWrite(buf, 8, 1);
+	sdCard.doWrite(buf, 10, 1);
+	sdCard.doWrite(buf, 12, 1);
+	sdCard.doRead(buf, 0, 1);
+
+	XPCC_LOG_DEBUG.dump_buffer(buf, 512);
+
+	sdCard.doWrite(buf, 10, 1);
+	sdCard.doRead(buf, 10, 1);
+
+	XPCC_LOG_DEBUG.dump_buffer(buf, 512);
+
+
 }
 
 
