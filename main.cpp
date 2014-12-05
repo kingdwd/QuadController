@@ -45,8 +45,8 @@ fat::FileSystem fs(&sdCard);
 #define _SER_DEBUG
 //UARTDevice uart(460800);
 
-//typedef CoopTask<USBMSD_VolumeHandler, 512> MSDHandler;
-typedef USBMSD_VolumeHandler MSDHandler;
+//typedef USBMSD_VolumeHandler MSDHandler;
+typedef CoopTask<USBMSD_VolumeHandler, 512> MSDHandler;
 
 Radio radio;
 USBCDCMSD<MSDHandler> usbSerial(0xffff, 0xf3c4, 0, &sdCard);
@@ -102,18 +102,20 @@ void sdread(int block) {
 	XPCC_LOG_DEBUG .printf("sd test\n");
 
 	memset(buf, 0, 512);
-
+//
 	sdCard.doWrite(buf, 8, 1);
 	sdCard.doWrite(buf, 10, 1);
 	sdCard.doWrite(buf, 12, 1);
 	sdCard.doRead(buf, 0, 1);
 
-	XPCC_LOG_DEBUG.dump_buffer(buf, 512);
+	XPCC_LOG_DEBUG .printf("ok\n");
 
-	sdCard.doWrite(buf, 10, 1);
-	sdCard.doRead(buf, 10, 1);
+	//XPCC_LOG_DEBUG.dump_buffer(buf, 512);
 
-	XPCC_LOG_DEBUG.dump_buffer(buf, 512);
+//	sdCard.doWrite(buf, 10, 1);
+//	sdCard.doRead(buf, 10, 1);
+//
+//	XPCC_LOG_DEBUG.dump_buffer(buf, 512);
 
 
 }
