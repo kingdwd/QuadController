@@ -49,9 +49,10 @@ fat::FileSystem fs(&sdCard);
 typedef CoopTask<USBMSD_VolumeHandler, 512> MSDHandler;
 
 Radio radio;
-USBCDCMSD<MSDHandler> usbSerial(0xffff, 0xf3c4, 0, &sdCard);
+//USBCDCMSD<MSDHandler> usbSerial(0xffff, 0xf3c4, 0, &sdCard);
+USB2xCDCMSD<MSDHandler> usb(0xffff, 0xf3c4, 0, &sdCard);
 
-xpcc::IOStream stream(usbSerial);
+xpcc::IOStream stream(usb.serial1);
 xpcc::NullIODevice null;
 
 BufferedUart<Uart3> uartGps(38400, 16, 256);
@@ -63,7 +64,7 @@ XpccHAL::UARTDriver uartBDriver(&uartGps);
 XpccHAL::UARTDriver uartCDriver(&radio);
 XpccHAL::UARTDriver uartDDriver(0);
 XpccHAL::UARTDriver uartEDriver(0);
-XpccHAL::UARTDriver uartConsoleDriver(&usbSerial);
+XpccHAL::UARTDriver uartConsoleDriver(&usb.serial1);
 
 void XpccHAL::UARTDriver::setBaud(uint32_t baud, xpcc::IODevice* device) {
 	if(device == &uartGps) {
@@ -121,7 +122,7 @@ void sdread(int block) {
 }
 
 
-CmdTerminal terminal(usbSerial);
+CmdTerminal terminal(usb.serial1);
 //CmdTerminal ucmd(uart);
 
 void dbgset() {
@@ -147,9 +148,7 @@ void idle() {
 		LPC_WDT->WDFEED = 0x55;
 	}
 
-	ledRed::toggle();
 	dbgtgl();
-
 }
 
 void set_wd_timeout(uint32_t seconds) {
@@ -208,8 +207,7 @@ public:
 //CoopTask<Test, 512> testTask;
 //Test test2;
 
-
-//const APM apm;
+const APM apm;
 
 int main() {
 	//set uart0 pins
@@ -275,12 +273,8 @@ int main() {
 	Pinsel::setFunc(0, 0, 2);
 	Pinsel::setFunc(0, 1, 2);
 
-
-	usbSerial.connect();
+	usb.connect();
 	usbConnPin::set();
-
-	//initialize eeprom
-	eeprom.initialize();
 
 	hal.init(0, 0);
 

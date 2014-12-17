@@ -43,7 +43,14 @@ bool DataFlash_Xpcc::NeedErase(void){
 }
 
 void DataFlash_Xpcc::WriteBlock(const void* pBuffer, uint16_t size) {
-	//XPCC_LOG_DEBUG .printf("log wr %d\n", size);
+
+	static xpcc::PeriodicTimer<> t(1000);
+	static uint32_t count;
+	count += size;
+	if(t.isExpired()) {
+		XPCC_LOG_DEBUG .printf("log wr %d b/s\n", count);
+		count = 0;
+	}
 }
 
 uint16_t DataFlash_Xpcc::find_last_log(void) {
