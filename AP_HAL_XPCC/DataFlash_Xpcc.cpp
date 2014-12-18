@@ -21,6 +21,15 @@ extern xpcc::fat::FileSystem fs;
 #define MAX_LOG_FILES 500U
 #define DATAFLASH_PAGE_SIZE 1024UL
 
+void DataWriter::handleInit() {
+
+}
+
+void DataWriter::handleTick() {
+
+}
+
+
 /*
   constructor
  */
@@ -95,6 +104,8 @@ void DataFlash_Xpcc::ListAvailableLogs(AP_HAL::BetterStream* port) {
 }
 
 uint16_t DataFlash_Xpcc::start_new_log(void) {
+
+	XPCC_LOG_DEBUG .printf("start new log\n");
 
 //	file_wr = new xpcc::fat::File;
 //	FRESULT res;

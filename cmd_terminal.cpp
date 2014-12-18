@@ -43,6 +43,7 @@ void CmdTerminal::handleCommand(uint8_t nargs, char* argv[]) {
 		AP_Param::show_all(hal.console);
 	}
 	else if (cmp(argv[0], "i2r")) {
+		PROFILE();
 		uint8_t addr = toInt(argv[1]);
 		uint8_t reg = toInt(argv[2]);
 
@@ -88,12 +89,16 @@ void CmdTerminal::handleCommand(uint8_t nargs, char* argv[]) {
 		XPCC_LOG_DEBUG << "Scanning i2c bus\n";
 		for (int i = 0; i < 128; i++) {
 			adapter.initialize(i, buf, 1);
-			I2cMaster2::start(&adapter);
+			if(!I2cMaster2::start(&adapter)) {
+				XPCC_LOG_DEBUG .printf("start failed\n");
+			}
 			while(adapter.isBusy());
+
 
 			if (I2cMaster2::getErrorState()
 					!= xpcc::I2cMaster::Error::AddressNack) {
-				XPCC_LOG_DEBUG.printf("Found device @ 0x%x\n", i);
+				XPCC_LOG_DEBUG.printf("Found device @ 0x%x %d %d\n", i,
+						I2cMaster2::getErrorState(), adapter.getState());
 			}
 		}
 	}

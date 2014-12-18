@@ -107,7 +107,7 @@ uint8_t I2CDriver::readRegisters(uint8_t addr, uint8_t reg,
 }
 
 void I2CDriver::stopped(DetachCause cause) {
-	xpcc::atomic::Lock l;
+	//xpcc::atomic::Lock l;
 	I2cWriteReadAdapter::stopped(cause);
 	if(nb_transaction) {
 		if(nb_callback != 0){

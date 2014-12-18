@@ -13,6 +13,14 @@
 #include <DataFlash.h>
 #include <xpcc/driver/storage/fat.hpp>
 
+class DataWriter : xpcc::TickerTask {
+protected:
+	void handleTick();
+	void handleInit();
+
+	IOBuffer buffer;
+};
+
 class DataFlash_Xpcc : public DataFlash_Class
 {
 public:
@@ -43,6 +51,7 @@ public:
     void ReadBlock(void *pkt, uint16_t size) {};
 protected:
     xpcc::fat::File* file_wr;
+    xpcc::CoopTask<DataWriter, 128> writer;
 };
 
 #endif // DataFlash_File_h

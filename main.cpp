@@ -52,19 +52,19 @@ Radio radio;
 //USBCDCMSD<MSDHandler> usbSerial(0xffff, 0xf3c4, 0, &sdCard);
 USB2xCDCMSD<MSDHandler> usb(0xffff, 0xf3c4, 0, &sdCard);
 
-xpcc::IOStream stream(usb.serial1);
+xpcc::IOStream stream(usb.serial2);
 xpcc::NullIODevice null;
 
 BufferedUart<Uart3> uartGps(38400, 16, 256);
 BufferedUart<Uart0> uart0(460800, 512, 128);
 IODeviceWrapper<Uart0> uart0raw;
 
-XpccHAL::UARTDriver uartADriver(0);
+XpccHAL::UARTDriver uartADriver(&usb.serial1);
 XpccHAL::UARTDriver uartBDriver(&uartGps);
 XpccHAL::UARTDriver uartCDriver(&radio);
 XpccHAL::UARTDriver uartDDriver(0);
 XpccHAL::UARTDriver uartEDriver(0);
-XpccHAL::UARTDriver uartConsoleDriver(&usb.serial1);
+XpccHAL::UARTDriver uartConsoleDriver(&usb.serial2);
 
 void XpccHAL::UARTDriver::setBaud(uint32_t baud, xpcc::IODevice* device) {
 	if(device == &uartGps) {
@@ -73,7 +73,7 @@ void XpccHAL::UARTDriver::setBaud(uint32_t baud, xpcc::IODevice* device) {
 }
 
 XpccHAL::UARTDriver::flow_control XpccHAL::UARTDriver::get_flow_control(xpcc::IODevice* device) {
-	if(device == &radio) {
+	if(device == &radio || device == &usb.serial1) {
 		return XpccHAL::UARTDriver::flow_control::FLOW_CONTROL_ENABLE;
 	}
 
@@ -122,7 +122,7 @@ void sdread(int block) {
 }
 
 
-CmdTerminal terminal(usb.serial1);
+CmdTerminal terminal(usb.serial2);
 //CmdTerminal ucmd(uart);
 
 void dbgset() {
@@ -146,6 +146,7 @@ void idle() {
 	if(t.isExpired()) {
 		LPC_WDT->WDFEED = 0xAA;
 		LPC_WDT->WDFEED = 0x55;
+
 	}
 
 	dbgtgl();

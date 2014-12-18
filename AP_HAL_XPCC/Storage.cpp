@@ -19,6 +19,9 @@ void Storage::init(void*)
 //different i2c delegate than i2cdriver
 //and the i2c driver sorts everything out
 void Storage::read_block(void* dst, uint16_t src, size_t n) {
+	if(xpcc::isInterruptContext()) {
+		hal.scheduler->panic("PANIC: eeprom read from ISR\n");
+	}
 	if(!eeprom.read(src, (uint8_t*)dst, n)) {
 		hal.scheduler->panic("PANIC: Eeprom read failed\n");
 	}
