@@ -11,16 +11,16 @@
 					</externalSetting>
 				</externalSettings>
 				<extensions>
+					<extension id="org.eclipse.cdt.core.ELF" point="org.eclipse.cdt.core.BinaryParser"/>
 					<extension id="org.eclipse.cdt.core.GCCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
 					<extension id="org.eclipse.cdt.core.GASErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
 					<extension id="org.eclipse.cdt.core.GLDErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
 					<extension id="org.eclipse.cdt.core.GmakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
 					<extension id="org.eclipse.cdt.core.CWDLocator" point="org.eclipse.cdt.core.ErrorParser"/>
-					<extension id="org.eclipse.cdt.core.ELF" point="org.eclipse.cdt.core.BinaryParser"/>
 				</extensions>
 			</storageModule>
 			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-				<configuration artifactName="${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.release,org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.cross.exe.release.735040115" name="Release" parent="cdt.managedbuild.config.gnu.cross.exe.release" postbuildStep="${ProjDirPath}/post-build &quot;${CWD}/${BuildArtifactFileName}&quot;">
+				<configuration artifactName="${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe,org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.release" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.cross.exe.release.735040115" name="Release" parent="cdt.managedbuild.config.gnu.cross.exe.release" postbuildStep="${ProjDirPath}/post-build &quot;${CWD}/${BuildArtifactFileName}&quot;">
 					<folderInfo id="cdt.managedbuild.config.gnu.cross.exe.release.735040115." name="/" resourcePath="">
 						<toolChain id="cdt.managedbuild.toolchain.gnu.cross.exe.release.1326684249" name="Cross GCC" nonInternalBuilderId="cdt.managedbuild.builder.gnu.cross" resourceTypeBasedDiscovery="true" superClass="cdt.managedbuild.toolchain.gnu.cross.exe.release">
 							<option id="cdt.managedbuild.option.gnu.cross.prefix.1091853966" name="Prefix" superClass="cdt.managedbuild.option.gnu.cross.prefix" value="arm-none-eabi-" valueType="string"/>
@@ -58,6 +58,7 @@
 								<option id="gnu.cpp.compiler.option.other.other.359987823" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" useByScannerDiscovery="false" value="-Wno-unused-parameter -Wno-unused-function -Wno-write-strings -c -fmessage-length=0 -mthumb -ffunction-sections -fdata-sections  -mcpu=cortex-m3 " valueType="string"/>
 								<option id="gnu.cpp.compiler.option.include.paths.1280403109" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/RadioHead}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_LandingGear}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ArduCopter}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/xpcc}&quot;"/>
@@ -73,6 +74,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/PID}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_Mission}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_Navigation}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_SerialManager}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AC_WPNav}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_Motors}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/GCS_MAVLink}&quot;"/>
@@ -199,8 +201,8 @@
 			<storageModule moduleId="org.eclipse.cdt.core.externalSettings">
 				<externalSettings containerId="org.eclipse.cdt.managedbuilder.pkgconfig.extSettings" factoryId="org.eclipse.cdt.core.extension.container.factory">
 					<externalSetting contentTypes="org.eclipse.cdt.managedbuilder.core.compiledObjectFile"/>
-					<externalSetting contentTypes="org.eclipse.cdt.core.cxxSource"/>
 					<externalSetting contentTypes="org.eclipse.cdt.core.cSource"/>
+					<externalSetting contentTypes="org.eclipse.cdt.core.cxxSource"/>
 				</externalSettings>
 				<externalSettings containerId="xpcc;cdt.managedbuild.config.gnu.cross.exe.release.735040115.1597797067" factoryId="org.eclipse.cdt.core.cfg.export.settings.sipplier">
 					<externalSetting>
