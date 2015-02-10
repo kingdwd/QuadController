@@ -17,14 +17,6 @@ public:
 	Eeprom() : xpcc::I2cEeprom<xpcc::lpc17::I2cMaster2>(0x50, 128), token(0) {}
 	virtual ~Eeprom(){};
 
-	void initialize()  {
-//		readByte(0, token);
-//
-//		if(token != TOKEN) {
-//			write(0, (uint8_t*)&eeDefaults, sizeof(eeDefaults));
-//		}
-	}
-
 	bool isValidToken() {
 		return token == TOKEN;
 	}

@@ -5,11 +5,13 @@
 using namespace xpcc::lpc17;
 using namespace XpccHAL;
 
-const uint8_t chMap[] = {3, 4, 5, 6};
+const uint8_t chMap[] = {3, 4, 5, 6, 1, 2};
 
 #define TIMER_PRESCALE 10
 
 void RCOutput::init(void* machtnichts) {
+	Pinsel::setFunc(2,0,1);
+	Pinsel::setFunc(2,1,1);
 	Pinsel::setFunc(2,2,1);
 	Pinsel::setFunc(2,3,1);
 	Pinsel::setFunc(2,4,1);
@@ -38,17 +40,19 @@ uint16_t RCOutput::get_freq(uint8_t ch) {
 
 void RCOutput::enable_ch(uint8_t ch)
 {
-	if(ch > 3) return;
+	if(ch > (sizeof(chMap)-1)) return;
 	PWM::channelEnable(chMap[ch]);
 }
 
 void RCOutput::disable_ch(uint8_t ch)
 {
+	if(ch > (sizeof(chMap)-1)) return;
 	PWM::channelEnable(chMap[ch], false);
 }
 
 void RCOutput::write(uint8_t ch, uint16_t period_us)
 {
+	if(ch > (sizeof(chMap)-1)) return;
 	_channels[ch] = period_us;
 	PWM::matchUpdate(chMap[ch], SystemCoreClock / 10 / (1000000 / period_us), PWM::UpdateType::PWM_MATCH_UPDATE_NEXT_RST);
 }
@@ -60,7 +64,7 @@ void RCOutput::write(uint8_t ch, uint16_t* period_us, uint8_t len)
 	}
 
 	auto m = PWM::multiMatchUpdate();
-	for(int i = ch; i < std::min(len, (uint8_t)4); i++) {
+	for(int i = ch; i < std::min(len, (uint8_t)sizeof(chMap)); i++) {
 		m.set(chMap[i], SystemCoreClock / 10 / (1000000 / period_us[i]));
 	}
 	m.commit(PWM::UpdateType::PWM_MATCH_UPDATE_NEXT_RST);

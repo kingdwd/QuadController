@@ -9,7 +9,7 @@
 
 class XpccHAL::I2CDriver : public AP_HAL::I2CDriver, xpcc::I2cWriteReadAdapter {
 public:
-    I2CDriver(AP_HAL::Semaphore* semaphore) : _semaphore(semaphore) {}
+    I2CDriver(AP_HAL::Semaphore* semaphore) : _semaphore(semaphore), error_count(0) {}
     void begin();
     void end();
     void setTimeout(uint16_t ms);
@@ -45,6 +45,7 @@ private:
     AP_HAL::Semaphore* _semaphore;
     AP_HAL::MemberProc nb_callback;
     volatile bool nb_transaction;
+    uint8_t error_count;
 
     void stopped(DetachCause cause) override;
 };

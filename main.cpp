@@ -125,22 +125,34 @@ void sdread(int block) {
 CmdTerminal terminal(usb.serial2);
 //CmdTerminal ucmd(uart);
 
-void dbgset() {
-	LPC_GPIO1->FIOSET |= 1<<20;
+void dbgset(uint8_t i) {
+	if(i==0)
+		LPC_GPIO1->FIOSET |= 1<<20;
+	else if(i==1) {
+		LPC_GPIO0->FIOSET |= 1<<26;
+	}
 }
 
-void dbgclr() {
-	LPC_GPIO1->FIOCLR |= 1<<20;
+void dbgclr(uint8_t i) {
+	if(i==0)
+		LPC_GPIO1->FIOCLR |= 1<<20;
+	else if(i==1) {
+		LPC_GPIO0->FIOCLR |= 1<<26;
+	}
 }
-void dbgtgl() {
-	LPC_GPIO1->FIOPIN ^= 1<<20;
+void dbgtgl(uint8_t i) {
+	if(i==0)
+		LPC_GPIO1->FIOPIN ^= 1<<20;
+	if(i==1) {
+		LPC_GPIO0->FIOPIN ^= 1<<26;
+	}
 }
 
 void idle() {
 	//test::toggle();
 	//__WFI();
 	//test::set();
-	//dbgset();
+	//dbgset(1);
 	static PeriodicTimer<> t(500);
 
 	if(t.isExpired()) {
@@ -148,8 +160,9 @@ void idle() {
 		LPC_WDT->WDFEED = 0x55;
 
 	}
+	//dbgclr(1);
 
-	dbgtgl();
+	//dbgtgl();
 }
 
 void set_wd_timeout(uint32_t seconds) {
@@ -220,6 +233,7 @@ int main() {
 	XPCC_LOG_DEBUG .printf("sdCard %x\n", &sdCard);
 
 	LPC_GPIO1->FIODIR |= 1<<20;
+	LPC_GPIO0->FIODIR |= 1<<26;
 	set_wd_timeout(6);
 	wd_init();
 

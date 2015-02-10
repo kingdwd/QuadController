@@ -13,6 +13,7 @@ Storage::Storage()
 
 void Storage::init(void*)
 {
+	eeprom.waitAvailable(10);
 }
 
 //we are not using semaphore here because eeprom driver uses a

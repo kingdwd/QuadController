@@ -104,6 +104,19 @@ void digitalWrite(uint8_t pin, uint8_t val) {
 	}
 }
 
+uint8_t digitalRead(uint8_t pin) {
+	uint8_t p = pin&0x1F;
+	switch(pin>>5) {
+	case 0:
+		return (LPC_GPIO0->FIOPIN & (1<<p)) != 0;
+	case 1:
+		return (LPC_GPIO1->FIOPIN & (1<<p)) != 0;
+	case 2:
+		return (LPC_GPIO2->FIOPIN & (1<<p)) != 0;
+	}
+	return 0;
+}
+
 class Spi : RHGenericSPI {
 
 public:

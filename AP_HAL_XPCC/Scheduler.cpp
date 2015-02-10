@@ -129,13 +129,24 @@ void Scheduler::_run_timer_procs(bool called_from_isr)
 {
     _in_timer_proc = true;
 
+    static uint8_t last_proc_id = 0;
+
     if (_timer_proc_enabled) {
         // now call the timer based drivers
-        for (int i = 0; i < _num_timer_procs; i++) {
+        for (int i = last_proc_id; i < _num_timer_procs; i++) {
             if (_timer_proc[i] != NULL) {
                 _timer_proc[i]();
             }
         }
+//        for (int i = 0; i < last_proc_id; i++) {
+//            if (_timer_proc[i] != NULL) {
+//                _timer_proc[i]();
+//            }
+//        }
+
+        //last_proc_id++;
+        //if(last_proc_id >= _num_timer_procs) last_proc_id = 0;
+
     } else if (called_from_isr) {
         _timer_event_missed = true;
     }
