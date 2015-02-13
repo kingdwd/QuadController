@@ -10,6 +10,7 @@ public:
     bool give();
     bool take(uint32_t timeout_ms);
     bool take_nonblocking();
+    bool take_async(AP_HAL::MemberProc callback);
 private:
 
     volatile bool _taken;

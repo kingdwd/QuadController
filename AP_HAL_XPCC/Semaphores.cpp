@@ -65,3 +65,6 @@ bool Semaphore::_take_nonblocking() {
 
 	  return !failed;
 }
+
+bool XpccHAL::Semaphore::take_async(AP_HAL::MemberProc callback) {
+}

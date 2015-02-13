@@ -162,7 +162,6 @@ void idle() {
 	}
 	//dbgclr(1);
 
-	//dbgtgl();
 }
 
 void set_wd_timeout(uint32_t seconds) {
@@ -194,9 +193,9 @@ class APM final : xpcc::TickerTask {
 			setup();
 			apm_initialized = true;
 		} else {
-			//dbgset();
+			//dbgtgl(1);
 			loop();
-			//dbgclr();
+
 		}
 	}
 };
