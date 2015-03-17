@@ -2,7 +2,7 @@
 #include "RCInput.h"
 #include <radio.hpp>
 
-#define NUM_CHANNELS 9
+#define NUM_CHANNELS 16
 
 using namespace XpccHAL;
 RCInput::RCInput()
@@ -34,57 +34,24 @@ uint8_t RCInput::num_channels() {
 
 uint16_t RCInput::read(uint8_t ch) {
 
-	//if radio link is lost for 500ms center axes
-	if(xpcc::Clock::now() - radio.rcPacketTimestamp > 500) {
-		radio.rcData.rollCh = 512;
-		radio.rcData.pitchCh = 512;
-		radio.rcData.yawCh = 512;
+	//if radio link is lost for 800ms center axes
+	if(xpcc::Clock::now() - radio.rcPacketTimestamp > 800) {
+		radio.rcData.channels[RC_ROLL] = 1500;
+		radio.rcData.channels[RC_PITCH] = 1500;
+		radio.rcData.channels[RC_YAW] = 1500;
+	}
+	//	//if radio link is lost for 2s, trigger throttle failsafe
+	if(xpcc::Clock::now() - radio.rcPacketTimestamp > 2000) {
+		radio.rcData.channels[RC_THROTTLE] = 800;
 	}
 
-	//if radio link is lost for 2s, trigger throttle failsafe
-	if(xpcc::Clock::now() - radio.rcPacketTimestamp > 1500) {
-		radio.rcData.throttleCh = -100;
+	last_read = radio.rcPacketTimestamp;
+
+	if(ch >= NUM_CHANNELS) {
+		return 0;
 	}
 
-	uint16_t val = 0;
-	switch(ch) {
-    case RC_ROLL:
-    	val = radio.rcData.rollCh;
-    	break;
-    case RC_PITCH:
-    	val = radio.rcData.pitchCh;
-    	break;
-    case RC_THROTTLE:
-    	val = radio.rcData.throttleCh;
-    	break;
-    case RC_YAW:
-    	val = radio.rcData.yawCh;
-    	break;
-    case RC_5: {
-    	uint8_t c = radio.rcData.switches >> 3;
-    	switch(c) {
-    	case 0:
-    		return 1500;
-    	case 1:
-    		return 1000;
-    	case 2:
-    		return 2000;
-    	}
-    	break;
-    }
-    case RC_6:
-    	val = radio.rcData.auxCh;
-    	break;
-
-	case RC_7:
-		return (radio.rcData.switches & (1<<0)) ? 2000 : 1000;
-	case RC_8:
-		return (radio.rcData.switches & (1<<1)) ? 2000 : 1000;
-	case RC_9:
-		return (radio.rcData.switches & (1<<2)) ? 2000 : 1000;
-	}
-
-	return 990 + val;
+	return radio.rcData.channels[ch];
 }
 
 uint8_t RCInput::read(uint16_t* periods, uint8_t len) {

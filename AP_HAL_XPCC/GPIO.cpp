@@ -96,11 +96,6 @@ bool GPIO::attach_interrupt(uint8_t interrupt_num, AP_HAL::Proc p,
     return false;
 }
 
-bool GPIO::usb_connected(void)
-{
-    return false;
-}
-
 DigitalSource::DigitalSource(uint8_t pin) :
     _pin(pin)
 {}

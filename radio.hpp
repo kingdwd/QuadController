@@ -27,6 +27,8 @@ struct Packet {
 	uint8_t id = PACKET_RC;
 	uint8_t seq; //sequence number
 	uint8_t ackSeq; //rx acknowledged seq number
+	int8_t rssi; // local rssi dBm
+	int8_t noise; //local noise dBm
 } __attribute__((packed));
 
 struct RadioCfgPacket : Packet {
@@ -34,19 +36,14 @@ struct RadioCfgPacket : Packet {
 		id = PACKET_RF_PARAM_SET;
 	}
 	uint32_t frequency;
-	float afcPullIn;
+	uint32_t afcPullIn;
 	uint8_t modemCfg;
 	uint8_t fhChannels;
 	uint8_t txPower;
 } __attribute__((packed));
 
 struct RCPacket : Packet {
-	int16_t yawCh;
-	int16_t pitchCh;
-	int16_t rollCh;
-	int16_t throttleCh;
-	int16_t auxCh;
-	uint8_t switches;
+	uint16_t channels[16];
 } __attribute__((packed));
 
 class Radio final : TickerTask, public RH_RF22, public BufferedIODevice {
@@ -81,10 +78,18 @@ public:
     	return _txGood;
     }
 
-    void setFrequency(uint32_t f, float afc = 0.05f) {
-    	freq.set_and_save_ifchanged(f);
+    int8_t getNoiseFloor() {
+    	return ((noiseFloor * 100) / 190) - 127;
+    }
 
-    	RH_RF22::setFrequency(f / 1000.0f, afc);
+    int8_t getRssi() {
+    	return ((rssi * 100) / 190) - 127;
+    }
+
+    void setFrequency(uint32_t f_khz, uint32_t afc_khz = 50) {
+    	freq.set_and_save_ifchanged(f_khz);
+
+    	RH_RF22::setFrequency(f_khz * 1000, afc_khz*1000);
     }
 
     void setTxPower(uint8_t pow) {
@@ -110,6 +115,7 @@ public:
     static const struct AP_Param::GroupInfo var_info[];
 protected:
 	void handleTxComplete();
+	void handleRxComplete();
 	bool sendAck(Packet* inPkt);
 
 	AP_Int32 freq;
@@ -119,13 +125,18 @@ protected:
 	AP_Int8 fhChannels;
 	AP_Int16 maxFragment;
 
-	uint8_t packetBuf[255];
-
+	uint8_t txBuf[255];
 	uint8_t dataLen; //packet size
 	uint8_t dataPos;
 
+	uint8_t rxBuf[255];
+	volatile uint8_t rxDataLen;
+
 	//uint8_t lastAckSeq; //last acknowledged sequence number
 	//uint8_t lastSeq;
+
+	uint8_t noiseFloor;
+	uint8_t rssi;
 
 	uint32_t numRetries;
 	uint8_t seq;

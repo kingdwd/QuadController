@@ -41,16 +41,17 @@ bool Semaphore::_take_from_mainloop(uint32_t timeout_ms) {
         return false;
     }
 
-    do {
-        /* Delay 1ms until we can successfully take, or we timed out */
-        hal.scheduler->delay(1);
-        timeout_ms--;
-        if (_take_nonblocking()) {
-            return true;
-        }
-    } while (timeout_ms > 0);
+	/* Delay 1ms until we can successfully take, or we timed out */
+	xpcc::Timeout<> t(timeout_ms);
 
-    return false;
+	while(!_take_nonblocking()) {
+		if(!t.isExpired()) {
+			xpcc::yield();
+		} else {
+			return false; //timed out
+		}
+	}
+	return true;
 }
 
 bool Semaphore::_take_nonblocking() {
@@ -64,7 +65,4 @@ bool Semaphore::_take_nonblocking() {
 	  }
 
 	  return !failed;
-}
-
-bool XpccHAL::Semaphore::take_async(AP_HAL::MemberProc callback) {
 }

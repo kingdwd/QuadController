@@ -39,6 +39,12 @@ void CmdTerminal::handleCommand(uint8_t nargs, char* argv[]) {
 		XPCC_LOG_DEBUG .printf("%d\n", f);
 		radio.setFrequency(f);
 	}
+	else if (cmp(argv[0], "stake")) {
+		hal.i2c->get_semaphore()->take_nonblocking();
+	}
+	else if (cmp(argv[0], "sgive")) {
+		hal.i2c->get_semaphore()->give();
+	}
 	else if (cmp(argv[0], "showall")) {
 		AP_Param::show_all(hal.console);
 	}

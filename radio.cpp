@@ -31,7 +31,7 @@ void Radio::handleInit() {
 	fhChannels.load();
 
 	setFHStepSize(10);
-	setFrequency(freq.get(), 0.05f);
+	setFrequency(freq.get());
 	setTxPower(txPow.get());
 	setModemConfig((RH_RF22::ModemConfigChoice)modemCfg.get());
 
@@ -39,15 +39,13 @@ void Radio::handleInit() {
 }
 
 void Radio::handleTick() {
-	if (!radio_irq::read()) {
-		isr0();
-	}
 
 	if (!transmitting()) {
-		if (available()) {
-			uint8_t buf[255];
-			uint8_t len = sizeof(buf);
-			recv(buf, &len);
+		if (rxDataLen) {
+			uint8_t* buf = rxBuf;
+			uint8_t len = rxDataLen;
+
+			noiseFloor = ((uint16_t) noiseFloor * 31 + rssiRead()) / 32;
 
 			if (len >= sizeof(Packet)) {
 				Packet* inPkt = (Packet*) buf;
@@ -60,9 +58,13 @@ void Radio::handleTick() {
 
 						uint8_t payload_len = len - sizeof(RCPacket);
 						if(payload_len) {
-							//TODO discard duplicates
+							if(inPkt->ackSeq == seq) {
+								rxbuf.write(buf+sizeof(RCPacket), payload_len);
+							} else {
+								XPCC_LOG_DEBUG
+								.printf("discard duplicate seq:%d ackSeq:%d\n", seq, inPkt->ackSeq);
 
-							rxbuf.write(buf+sizeof(RCPacket), payload_len);
+							}
 						}
 					}
 
@@ -71,14 +73,14 @@ void Radio::handleTick() {
 					RadioCfgPacket* cfg = (RadioCfgPacket*) inPkt;
 
 					printf("--Radio parameters received--\n");
-					printf("Freq %d\n", cfg->frequency);
-					printf("AfcPullIn %f\n", cfg->afcPullIn);
+					printf("Freq %d\n", cfg->frequency/1000);
+					printf("AfcPullIn %d\n", cfg->afcPullIn/1000);
 					printf("Modem setting %d\n", cfg->modemCfg);
 					printf("FH Channels %d\n", cfg->fhChannels);
 					printf("TX Power %d\n", cfg->txPower);
-
-					if (freq != cfg->frequency) {
-						setFrequency(cfg->frequency, cfg->afcPullIn);
+					setModeIdle();
+					if (freq != cfg->frequency/1000) {
+						setFrequency(cfg->frequency/1000, cfg->afcPullIn/1000);
 					}
 
 					if (cfg->modemCfg != modemCfg.get()) {
@@ -90,6 +92,7 @@ void Radio::handleTick() {
 					}
 
 					fhChannels.set_and_save_ifchanged(cfg->fhChannels);
+					setModeRx();
 
 				}
 					break;
@@ -107,6 +110,8 @@ void Radio::handleTick() {
 
 				}
 			}
+
+			rxDataLen = 0;
 		}
 
 		//XPCC_LOG_DEBUG .dump_buffer(buf, len);
@@ -116,7 +121,7 @@ void Radio::handleTick() {
 
 bool Radio::sendAck(Packet* inPkt) {
 	uint16_t txavail = txbuf.bytes_used();
-	Packet* out = (Packet*)packetBuf;
+	Packet* out = (Packet*)txBuf;
 
 	if((uint16_t)maxFragment > (RH_RF22_MAX_MESSAGE_LEN - sizeof(Packet))) {
 		maxFragment = RH_RF22_MAX_MESSAGE_LEN - sizeof(Packet);
@@ -125,6 +130,8 @@ bool Radio::sendAck(Packet* inPkt) {
 	}
 	uint16_t maxFrag = maxFragment;
 
+	out->noise = getNoiseFloor();
+	out->rssi = getRssi();
 
 	if(inPkt->ackSeq != seq && out->id == PACKET_DATA) {
 		//retry last data transmission
@@ -132,7 +139,7 @@ bool Radio::sendAck(Packet* inPkt) {
 		out->seq = ++seq;
 		out->ackSeq = inPkt->seq;
 
-		RH_RF22::send(packetBuf, dataLen);
+		RH_RF22::send(txBuf, dataLen);
 	} else {
 
 		out->seq = ++seq;
@@ -141,19 +148,19 @@ bool Radio::sendAck(Packet* inPkt) {
 
 		if((txavail >= maxFrag) || (latencyTimer.isExpired() && txavail)) {
 
-			uint8_t* buf = packetBuf + sizeof(Packet);
+			uint8_t* buf = txBuf + sizeof(Packet);
 			for(int i = 0; i < std::min(maxFrag, txavail); i++) {
 				*buf++ = txbuf.read();
 			}
 
-			dataLen = buf - packetBuf;
+			dataLen = buf - txBuf;
 			//printf("Send data %d\n", dataLen);
-			RH_RF22::send(packetBuf, dataLen);
+			RH_RF22::send(txBuf, dataLen);
 
 			latencyTimer.restart(latency);
 		} else {
 			out->id = PACKET_ACK; //no data to send, send ack
-			RH_RF22::send(packetBuf, sizeof(Packet));
+			RH_RF22::send(txBuf, sizeof(Packet));
 		}
 	}
 
@@ -204,6 +211,20 @@ uint8_t Radio::spiBurstRead0(uint8_t reg, uint8_t* dest, uint8_t len) {
     ATOMIC_BLOCK_END;
     return status;
 
+}
+
+void Radio::handleRxComplete() {
+	rssi = (rssi * 7 + (uint8_t)lastRssi()) / 8;
+
+	if(available()) {
+		if(rxDataLen) {
+			XPCC_LOG_DEBUG .printf("packet not cleared\n");
+		}
+		rxDataLen = sizeof(rxBuf);
+		if(!recv(rxBuf, (uint8_t*)&rxDataLen)) {
+			rxDataLen = 0;
+		}
+	}
 }
 
 void Radio::handleTxComplete() {

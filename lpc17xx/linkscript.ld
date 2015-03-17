@@ -31,7 +31,9 @@ PROVIDE(__ram_start = ORIGIN(RAM));
 PROVIDE(__flash_start = ORIGIN(FLASH));
 PROVIDE(__ram_end   = ORIGIN(RAM) + LENGTH(RAM));
 
-PROVIDE(__stack_end  = __ram_end);
+/*PROVIDE(__stack_end  = __ram_end);*/
+PROVIDE(__stack_end   = ORIGIN(RAM_APB0) + LENGTH(RAM_APB0));
+
 PROVIDE(__stack_start  = __stack_end - THREAD_STACK_SIZE);
 
 PROVIDE(__heap_start = ORIGIN(RAM_APB0));

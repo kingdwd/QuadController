@@ -145,6 +145,7 @@ bool I2CDriver::readNonblocking(uint8_t addr, uint8_t reg,
                               uint8_t len, uint8_t* data,
 							  AP_HAL::MemberProc callback) {
 	if(nb_transaction || !len) {
+		error_count++;
 		return false;
 	}
 
@@ -153,14 +154,15 @@ bool I2CDriver::readNonblocking(uint8_t addr, uint8_t reg,
 		error_count++;
 		return false;
 	}
+	{
+	xpcc::atomic::Lock l;
 	if(!I2C::start(this)) {
 		error_count++;
 		return false;
 	}
-
 	nb_callback = callback;
 	nb_transaction = true;
-
+	}
 	return true;
 }
 

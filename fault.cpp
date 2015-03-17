@@ -18,10 +18,45 @@ void boot_jump( uint32_t address ){
 }
 
 
-extern "C" void HardFault_Handler(void)
+extern "C" __attribute((naked)) void HardFault_Handler(void)
 {
-  asm volatile("MRS r0, MSP;"
-		       "B Hard_Fault_Handler");
+	register uint32_t* msp = (uint32_t*)__get_MSP();
+	register uint32_t* psp = (uint32_t*)__get_PSP();
+
+	asm volatile("push {lr}");
+
+	XPCC_LOG_ERROR .flush();
+
+	XPCC_LOG_ERROR << "Hard Fault\nMSP\n";
+	XPCC_LOG_ERROR .printf("r0  = 0x%08x\n", msp[r0]);
+	XPCC_LOG_ERROR .printf("r1  = 0x%08x\n", msp[r1]);
+	XPCC_LOG_ERROR .printf("r2  = 0x%08x\n", msp[r2]);
+	XPCC_LOG_ERROR .printf("r3  = 0x%08x\n", msp[r3]);
+	XPCC_LOG_ERROR .printf("r12 = 0x%08x\n", msp[r12]);
+	XPCC_LOG_ERROR .printf("lr  = 0x%08x\n", msp[lr]);
+	XPCC_LOG_ERROR .printf("pc  = 0x%08x\n", msp[pc]);
+	XPCC_LOG_ERROR .printf("psr = 0x%08x\n", msp[psr]);
+
+	XPCC_LOG_ERROR << "PSP\n";
+	XPCC_LOG_ERROR .printf("r0  = 0x%08x\n", psp[r0]);
+	XPCC_LOG_ERROR .printf("r1  = 0x%08x\n", psp[r1]);
+	XPCC_LOG_ERROR .printf("r2  = 0x%08x\n", psp[r2]);
+	XPCC_LOG_ERROR .printf("r3  = 0x%08x\n", psp[r3]);
+	XPCC_LOG_ERROR .printf("r12 = 0x%08x\n", psp[r12]);
+	XPCC_LOG_ERROR .printf("lr  = 0x%08x\n", psp[lr]);
+	XPCC_LOG_ERROR .printf("pc  = 0x%08x\n", psp[pc]);
+	XPCC_LOG_ERROR .printf("psr = 0x%08x\n", psp[psr]);
+
+	XPCC_LOG_ERROR .flush();
+
+	LPC_WDT->WDMOD = 0x3;
+	LPC_WDT->WDFEED = 0xFF;
+
+	while(1) {
+		ledRed::set();
+		ledGreen::set();
+	}
+
 }
 extern "C" void UsageFault_Handler(void)
 {

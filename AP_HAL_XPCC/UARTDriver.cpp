@@ -73,7 +73,6 @@ size_t UARTDriver::write(uint8_t c) {
 
 size_t UARTDriver::write(const uint8_t *buffer, size_t size)
 {
-    size_t x = 0;
     size_t n = 0;
     if(!_device)
     	return 0;

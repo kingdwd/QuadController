@@ -27,6 +27,8 @@
 #include <RH_RF22.h>
 #include "radio.hpp"
 #include "AP_HAL_XPCC/UARTDriver.h"
+#include "AP_HAL_XPCC/Semaphores.h"
+#include "AP_HAL_XPCC/GPIO.h"
 
 #include <xpcc/driver/storage/sd/SDCardVolume.hpp>
 #include <xpcc/driver/storage/sd/USBMSD_VolumeHandler.hpp>
@@ -45,12 +47,42 @@ fat::FileSystem fs(&sdCard);
 #define _SER_DEBUG
 //UARTDevice uart(460800);
 
+volatile bool storage_lock = 1;
+
+class USBMSD_HandlerWrapper : public USBMSD_VolumeHandler {
+	using USBMSD_VolumeHandler::USBMSD_VolumeHandler;
+
+	int disk_status() override {
+		if(storage_lock) {
+			return NO_DISK;
+		} else {
+			return USBMSD_VolumeHandler::disk_status();
+		}
+	}
+};
+
 //typedef USBMSD_VolumeHandler MSDHandler;
-typedef CoopTask<USBMSD_VolumeHandler, 512> MSDHandler;
+typedef CoopTask<USBMSD_HandlerWrapper, 512> MSDHandler;
 
 Radio radio;
-//USBCDCMSD<MSDHandler> usbSerial(0xffff, 0xf3c4, 0, &sdCard);
-USB2xCDCMSD<MSDHandler> usb(0xffff, 0xf3c4, 0, &sdCard);
+//
+MSDHandler* msd_handler = new MSDHandler(&sdCard);
+//MSDHandler msd_handler(&sdCard);
+USB2xCDCMSD usb(msd_handler, 0xffff, 0xf3c4, 0);
+
+class DFU : public DFUHandler {
+public:
+	void do_detach() {
+		detach = true;
+	}
+	bool detach;
+};
+DFU dfu;
+
+bool XpccHAL::GPIO::usb_connected(void)
+{
+	return !usb.suspended();
+}
 
 xpcc::IOStream stream(usb.serial2);
 xpcc::NullIODevice null;
@@ -64,7 +96,7 @@ XpccHAL::UARTDriver uartBDriver(&uartGps);
 XpccHAL::UARTDriver uartCDriver(&radio);
 XpccHAL::UARTDriver uartDDriver(0);
 XpccHAL::UARTDriver uartEDriver(0);
-XpccHAL::UARTDriver uartConsoleDriver(&usb.serial2);
+XpccHAL::UARTDriver uartConsoleDriver(&uart0/*&usb.serial2*/);
 
 void XpccHAL::UARTDriver::setBaud(uint32_t baud, xpcc::IODevice* device) {
 	if(device == &uartGps) {
@@ -159,6 +191,11 @@ void idle() {
 		LPC_WDT->WDFEED = 0xAA;
 		LPC_WDT->WDFEED = 0x55;
 
+		if(dfu.detach) {
+			//enter bootloader
+			LPC_WDT->WDMOD = 0x03;
+			LPC_WDT->WDFEED = 0xFF;
+		}
 	}
 	//dbgclr(1);
 
@@ -186,7 +223,8 @@ extern void setup();
 extern void loop();
 
 bool apm_initialized = false;
-class APM final : xpcc::TickerTask {
+class APM : public xpcc::TickerTask {
+protected:
 	void handleTick() {
 		//dbgtgl();
 		if(!apm_initialized) {
@@ -220,6 +258,7 @@ public:
 //CoopTask<Test, 512> testTask;
 //Test test2;
 
+//CoopTask<APM, 2048> apm;
 const APM apm;
 
 int main() {
@@ -227,6 +266,7 @@ int main() {
 	Pinsel::setFunc(0, 2, 1);
 	Pinsel::setFunc(0, 3, 1);
 	usbConnPin::setOutput(false);
+	usb.addInterfaceHandler(dfu);
 
 	XPCC_LOG_DEBUG .printf("----- starting -----\n");
 	XPCC_LOG_DEBUG .printf("sdCard %x\n", &sdCard);
@@ -239,7 +279,7 @@ int main() {
 	NVIC_SetPriority(USB_IRQn, 4);
 	NVIC_SetPriority(DMA_IRQn, 0);
 	NVIC_SetPriority(I2C2_IRQn, 2);
-	//NVIC_SetPriority(EINT3_IRQn, 2);
+	NVIC_SetPriority(EINT3_IRQn, 0);
 	NVIC_SetPriority(UART0_IRQn, 5);
 
 	//debugIrq = true;
@@ -250,7 +290,8 @@ int main() {
 	lpc17::RitClock::initialize();
 
 	lpc17::SysTickTimer::enable();
-	//lpc17::SysTickTimer::attachInterrupt(sysTick);
+
+
 
 /////
 	SpiMaster1::initialize(SpiMaster1::Mode::MODE_0, 1000000);

@@ -14,11 +14,18 @@
 #include <xpcc/driver/storage/fat.hpp>
 
 class DataWriter : xpcc::TickerTask {
+public:
+	void setFile(xpcc::fat::File *file);
+
+	bool write(uint8_t* data, size_t size);
+
 protected:
 	void handleTick();
 	void handleInit();
 
+	uint8_t tmpBuffer[64];
 	IOBuffer buffer;
+	xpcc::fat::File* file;
 };
 
 class DataFlash_Xpcc : public DataFlash_Class
@@ -49,9 +56,13 @@ public:
     bool NeedErase(void);
     void EraseAll() {}
     void ReadBlock(void *pkt, uint16_t size) {};
+
 protected:
-    xpcc::fat::File* file_wr;
-    xpcc::CoopTask<DataWriter, 128> writer;
+    xpcc::fat::File *file;
+    xpcc::CoopTask<DataWriter, 512> writer;
+
+    uint16_t last_log;
+    uint16_t num_logs;
 };
 
 #endif // DataFlash_File_h
