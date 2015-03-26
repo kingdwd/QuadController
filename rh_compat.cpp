@@ -17,6 +17,7 @@ int printf(const char* fmt, ...) {
 	return 0;
 }
 
+int puts(const char* s) __attribute__((used));
 int puts(const char* s) {
 	XPCC_LOG_DEBUG << s << xpcc::endl;
 	return 1;

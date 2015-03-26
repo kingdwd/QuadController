@@ -22,7 +22,8 @@ extern void sdread(int b);
 
 void CmdTerminal::handleCommand(uint8_t nargs, char* argv[]) {
 	if (cmp(argv[0], "tasks")) {
-		printTasks(xpcc::log::debug);
+		IOStream str(device);
+		printTasks(str);
 	}
 	if (cmp(argv[0], "test")) {
 		sdread(atol(argv[1]));
@@ -36,7 +37,7 @@ void CmdTerminal::handleCommand(uint8_t nargs, char* argv[]) {
 		//XPCC_LOG_DEBUG .printf("%d\n", qController.mpu.getAccelerationZ());
 	} else if (cmp(argv[0], "freq")) {
 		uint32_t f = atol(argv[1]);
-		XPCC_LOG_DEBUG .printf("%d\n", f);
+		printf("%d\n", f);
 		radio.setFrequency(f);
 	}
 	else if (cmp(argv[0], "stake")) {
@@ -142,13 +143,13 @@ void CmdTerminal::handleCommand(uint8_t nargs, char* argv[]) {
 	else if (cmp(argv[0], "dump")) {
 		if (crashData[0] == 0xFAFA5555) {
 			printf("------ HARD FAULT------\n");
-			XPCC_LOG_DEBUG.printf("pc  = 0x%08x\n", crashData[1]);
-			XPCC_LOG_DEBUG.printf("lr  = 0x%08x\n", crashData[2]);
+			printf("pc  = 0x%08x\n", crashData[1]);
+			printf("lr  = 0x%08x\n", crashData[2]);
 			printf("------\n");
 		} else if (crashData[0] == 0xFAFA4444) {
 			printf("------ WDT TIMEOUT------\n");
-			XPCC_LOG_DEBUG.printf("pc  = 0x%08x\n", crashData[1]);
-			XPCC_LOG_DEBUG.printf("lr  = 0x%08x\n", crashData[2]);
+			printf("pc  = 0x%08x\n", crashData[1]);
+			printf("lr  = 0x%08x\n", crashData[2]);
 			printf("------\n");
 		} else {
 			printf("No dump\n");

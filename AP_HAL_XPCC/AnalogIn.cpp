@@ -9,6 +9,10 @@ extern const AP_HAL::HAL& hal;
 AnalogSource::AnalogSource(int16_t chan) : _chan(-1)
 {
 	set_pin(chan);
+	count = 0;
+	sum = 0;
+	_voltage_avg = 0;
+	_voltage_latest = 0;
 }
 
 float AnalogSource::read_average() {
@@ -16,7 +20,8 @@ float AnalogSource::read_average() {
 }
 
 float AnalogSource::voltage_average() {
-	//hal.console->printf("%d %d \n", ADC::getData(4), ADC::getData(5));
+	//hal.console->printf("%.3f\n", _voltage_avg);
+
     return _voltage_avg;
 }
 
@@ -28,11 +33,27 @@ float AnalogSource::read_latest() {
 	if(!_chan)
 		return -1.0;
 
-    return ADC::getData(_chan) * (3.3f / 4096.0f);
+    return _voltage_latest;
+}
+
+void AnalogSource::_irq() {
+	uint32_t d = ADC::getData(_chan);
+	filter.append(d);
+	filter.update();
+
+	sum += filter.getValue();
+	count++;
+
 }
 
 void AnalogSource::_tick() {
-	_voltage_avg = (_voltage_avg*15 + read_latest()) / 16;
+	if(count) {
+		_voltage_latest = ((float)sum/count) * (3.3f / 4096.0f);
+		sum = 0;
+		count = 0;
+	}
+
+	_voltage_avg = (_voltage_avg*99 + _voltage_latest) / 100.0;
 }
 
 void AnalogSource::set_pin(uint8_t p)
@@ -48,7 +69,7 @@ void AnalogSource::set_pin(uint8_t p)
 	_chan = p;
 
 	ADC::enableChannel(_chan);
-
+	ADC::enableChannelInt(_chan, true);
 }
 
 void AnalogSource::set_stop_pin(uint8_t p)
@@ -64,6 +85,10 @@ AnalogIn::AnalogIn()
 
 void AnalogIn::init(void* machtnichts)
 {
+	ADC::init(10000);
+	ADC::burstMode(true);
+
+	NVIC_EnableIRQ(ADC_IRQn);
 }
 
 void AnalogIn::_tick()
@@ -71,6 +96,14 @@ void AnalogIn::_tick()
 	for(int i = 0; i < 16; i++) {
 		if(channels[i]) {
 			channels[i]->_tick();
+		}
+	}
+}
+
+void AnalogIn::irq() {
+	for(int i = 0; i < 16; i++) {
+		if(channels[i] && ADC::isDone(channels[i]->_chan)) {
+			channels[i]->_irq();
 		}
 	}
 }
@@ -85,4 +118,11 @@ AP_HAL::AnalogSource* AnalogIn::channel(int16_t n) {
 	}
 	hal.console->println("Out of analog channels");
 	return 0;
+}
+
+
+extern "C"
+void ADC_IRQHandler() {
+	static_cast<AnalogIn*>(hal.analogin)->irq();
+
 }

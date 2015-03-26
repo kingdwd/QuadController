@@ -15,9 +15,15 @@
 
 class DataWriter : xpcc::TickerTask {
 public:
-	void setFile(xpcc::fat::File *file);
+	void startWrite(xpcc::fat::File *file);
 
 	bool write(uint8_t* data, size_t size);
+
+	void stopWrite();
+
+	uint16_t bytesAvailable() {
+		return buffer.bytes_free();
+	}
 
 protected:
 	void handleTick();
@@ -49,6 +55,8 @@ public:
 
     uint16_t start_new_log(void);
 
+    xpcc::fat::File* openLog(uint16_t log_num, char* mode);
+
     void        Init(const struct LogStructure *structure, uint8_t num_types);
     void        ReadManufacturerID();
     bool        CardInserted();
@@ -59,6 +67,7 @@ public:
 
 protected:
     xpcc::fat::File *file;
+    xpcc::fat::File *read_file;
     xpcc::CoopTask<DataWriter, 512> writer;
 
     uint16_t last_log;

@@ -23,38 +23,52 @@ extern volatile bool storage_lock;
 #define MAX_LOG_FILES 500U
 #define DATAFLASH_PAGE_SIZE 1024UL
 
-void DataWriter::setFile(xpcc::fat::File *file) {
+void DataWriter::startWrite(xpcc::fat::File *file) {
 	this->file = file;
 	if(!file) {
-		stop(); //stop task
+		stopTask(); //stop task
 	} else {
-		start(); //resume task
+		startTask(); //resume task
 	}
 }
 
 void DataWriter::handleInit() {
-	if(!buffer.allocate(1024)) {
+	if(!buffer.allocate(4096)) {
 		hal.scheduler->panic("Failed to allocate logger buffer");
 	}
 
 
 }
 
+void DataWriter::stopWrite() {
+	if(file) {
+		//write all remaining data
+		while(buffer.bytes_used()) {
+			handleTick();
+		}
+
+		stopTask(); //stop task
+	}
+}
+
 void DataWriter::handleTick() {
 	static PeriodicTimer<> t(100);
 	if(file && storage_lock) {
-		int16_t n_read = buffer.read(tmpBuffer, 64);
-		if(n_read > 0) {
-			file->write(tmpBuffer, n_read);
-			if(t.isExpired()) {
-				file->flush();
+		while(buffer.bytes_used()) {
+			int16_t n_read = buffer.read(tmpBuffer, 64);
+			if(n_read > 0) {
+				file->write(tmpBuffer, n_read);
 			}
+		}
+		if(t.isExpired()) {
+			file->flush();
 		}
 	}
 }
 
 bool DataWriter::write(uint8_t* data, size_t size) {
 	buffer.write(data, size);
+	return true;
 }
 
 /*
@@ -121,6 +135,36 @@ void DataFlash_Xpcc::Init(const struct LogStructure *structure, uint8_t num_type
     	storage_lock = 0;
 }
 
+fat::File* DataFlash_Xpcc::openLog(uint16_t log_num, char* mode) {
+
+	fat::Directory dir;
+
+	dir.open("/apm");
+	int count = 0;
+
+	fat::File *file = 0;
+
+	dir.readDir([&count,log_num,&file, mode](fat::FileInfo* info) {
+		if(count == log_num) {
+			StringStream<32> name;
+			name << "/apm/" << info->getName();
+
+			file = new fat::File;
+			if(file->open(name.buffer, mode) != FR_OK) {
+				delete file;
+				file = 0;
+			}
+
+			return;
+		}
+		count++;
+	});
+
+	dir.close();
+
+	return file;
+}
+
 bool DataFlash_Xpcc::NeedErase(void){
 
 	return false;
@@ -137,16 +181,22 @@ void DataFlash_Xpcc::WriteBlock(const void* pBuffer, uint16_t size) {
 	}
 
 	//if usb is connected, stop writing logs and mount msd storage
-	if(hal.gpio->usb_connected() && file && file->isOpened()) {
+	if(file && file->isOpened() && hal.gpio->usb_connected()) {
 		XPCC_LOG_DEBUG .printf("usb detected, stop log write\n");
-		//storage_lock = 0;
+		writer.stopWrite();
 		file->close();
 
+		storage_lock = 0;
 		return;
 	}
 
-	if(storage_lock)
-		writer.write((uint8_t*)pBuffer, size);
+	if(storage_lock) {
+		if(writer.bytesAvailable() < size) {
+			XPCC_LOG_DEBUG .printf("Dataflash: data overrun\n");
+		} else {
+			writer.write((uint8_t*)pBuffer, size);
+		}
+	}
 }
 
 uint16_t DataFlash_Xpcc::find_last_log(void) {
@@ -156,22 +206,59 @@ uint16_t DataFlash_Xpcc::find_last_log(void) {
 
 void DataFlash_Xpcc::get_log_boundaries(uint16_t log_num, uint16_t& start_page,
 		uint16_t& end_page) {
-	XPCC_LOG_INFO << __PRETTY_FUNCTION__ << xpcc::endl;
+	start_page = 0;
+
+	uint32_t timestamp, size;
+
+	get_log_info(log_num, size, timestamp);
+
+	end_page = size / DATAFLASH_PAGE_SIZE;
+
+	if(read_file) {
+		read_file->close();
+		delete read_file;
+	}
 }
 
 void DataFlash_Xpcc::get_log_info(uint16_t log_num, uint32_t& size,
 		uint32_t& time_utc) {
-	XPCC_LOG_INFO << __PRETTY_FUNCTION__ << xpcc::endl;
+
+	fat::Directory dir;
+
+	dir.open("/apm");
+	int count = 0;
+
+	dir.readDir([&count,log_num,&size,&time_utc](fat::FileInfo* info) {
+		if(count == log_num) {
+			size = info->getSize();
+			time_utc = info->getUnixTimestamp();
+		}
+		count++;
+	});
+
+	dir.close();
 }
 
 int16_t DataFlash_Xpcc::get_log_data(uint16_t log_num, uint16_t page,
 		uint32_t offset, uint16_t len, uint8_t* data) {
-	XPCC_LOG_INFO << __PRETTY_FUNCTION__ << xpcc::endl;
+	//XPCC_LOG_INFO << __PRETTY_FUNCTION__ << xpcc::endl;
+
+	if(!read_file) {
+		read_file = openLog(log_num, "r");
+		if(!read_file) {
+			XPCC_LOG_DEBUG .printf("Failed to open log for reading\n");
+			return -1;
+		}
+	}
+	//TODO: implement offsets
+
+	len = read_file->read(data, len);
+
+	return len;
 }
 
 uint16_t DataFlash_Xpcc::get_num_logs(void) {
-	XPCC_LOG_INFO << __PRETTY_FUNCTION__ << xpcc::endl;
-	return 0;
+	return num_logs;
 }
 
 void DataFlash_Xpcc::LogReadProcess(uint16_t log_num, uint16_t start_page,
@@ -204,8 +291,9 @@ uint16_t DataFlash_Xpcc::start_new_log(void) {
 	if(!file) {
 		file = new xpcc::fat::File;
 	} else {
-		if(file->isOpened())
+		if(file->isOpened()) {
 			file->close();
+		}
 	}
 
 	last_log++;
@@ -215,19 +303,18 @@ uint16_t DataFlash_Xpcc::start_new_log(void) {
 
 	if(!file->open(s.buffer, "w") == FR_OK) {
 		hal.console->printf("LOG: Failed to open %s for writing\n", s.buffer);
-		writer.setFile(0);
+		writer.startWrite(0);
 		storage_lock = 0;
 		return 0xFFFF;
 	} else {
 		file->flush();
-		writer.setFile(file);
+		writer.startWrite(file);
 
 		fat::File l;
 		l.open("/apm/lastlog.txt", "w");
 		l << last_log;
 		l.close();
 	}
-
 
 	return 0;
 }

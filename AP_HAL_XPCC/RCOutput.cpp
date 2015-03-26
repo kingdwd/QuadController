@@ -5,7 +5,7 @@
 using namespace xpcc::lpc17;
 using namespace XpccHAL;
 
-const uint8_t chMap[] = {3, 4, 5, 6, 1, 2};
+const uint8_t chMap[] = {1, 2, 3, 4, 5, 6};
 
 #define TIMER_PRESCALE 10
 

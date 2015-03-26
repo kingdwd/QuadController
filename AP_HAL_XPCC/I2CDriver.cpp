@@ -1,12 +1,18 @@
 
-#include <AP_HAL.h>
+#include "AP_HAL_XPCC.h"
 #include "I2CDriver.h"
 #include <xpcc/architecture.hpp>
 
 using namespace XpccHAL;
 
-void I2CDriver::begin() {}
+extern const AP_HAL::HAL& hal;
+
+void I2CDriver::begin() {
+	hal.scheduler->register_timer_process(AP_HAL_MEMBERPROC(&I2CDriver::watchdog));
+}
+
 void I2CDriver::end() {}
+
 void I2CDriver::setTimeout(uint16_t ms) {}
 void I2CDriver::setHighSpeed(bool active) {}
 
@@ -131,13 +137,21 @@ uint8_t I2CDriver::readRegisters(uint8_t addr, uint8_t reg,
 }
 
 void I2CDriver::stopped(DetachCause cause) {
-	//xpcc::atomic::Lock l;
+	xpcc::atomic::Lock l;
 	I2cWriteReadAdapter::stopped(cause);
+
 	if(nb_transaction) {
 		if(nb_callback != 0){
-			nb_transaction = false;
-			nb_callback();
+			nb_transaction = 0;
+			AP_HAL::MemberProc cb = nb_callback;
+			nb_callback = 0;
+			{
+				xpcc::atomic::Unlock u;
+				cb();
+				//dbgclr(1);
+			}
 		}
+
 	}
 }
 
@@ -155,15 +169,32 @@ bool I2CDriver::readNonblocking(uint8_t addr, uint8_t reg,
 		return false;
 	}
 	{
-	xpcc::atomic::Lock l;
-	if(!I2C::start(this)) {
-		error_count++;
-		return false;
+		xpcc::atomic::Lock l;
+		nb_callback = callback;
+		nb_transaction = hal.scheduler->millis();
+		if(!nb_transaction) nb_transaction = 1; //wraparound case, v unlikely
+
+		if(!I2C::start(this)) {
+			error_count++;
+			nb_transaction = 0;
+			return false;
+		}
+
 	}
-	nb_callback = callback;
-	nb_transaction = true;
-	}
+	//dbgset(1);
 	return true;
+}
+
+void I2CDriver::watchdog() {
+	if(nb_transaction && (hal.scheduler->millis() - nb_transaction) > 50) {
+		//lockup occurred
+		//this is a bug, but to recover, reset i2c transaction and unlock semaphore
+		error_count++;
+		nb_transaction = 0;
+		nb_callback = 0;
+		get_semaphore()->give();
+		XPCC_LOG_DEBUG .printf("i2c lockup\n");
+	}
 }
 
 uint8_t I2CDriver::lockup_count() {

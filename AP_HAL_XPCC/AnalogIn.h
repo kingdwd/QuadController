@@ -3,6 +3,7 @@
 #define __AP_HAL_EMPTY_ANALOGIN_H__
 
 #include "AP_HAL_XPCC.h"
+#include <xpcc/math/filter.hpp>
 
 class XpccHAL::AnalogSource final: public AP_HAL::AnalogSource {
 public:
@@ -19,8 +20,15 @@ public:
 private:
     friend class XpccHAL::AnalogIn;
     void _tick();
+    void _irq();
 
+    uint32_t sum;
+    uint8_t count;
+
+    float _voltage_latest;
     float _voltage_avg;
+
+    xpcc::filter::Median<uint32_t, 3> filter;
 
     uint8_t _chan;
 };
@@ -35,6 +43,8 @@ public:
     }
 
     friend class XpccHAL::Scheduler;
+
+    void irq();
 private:
     void _tick();
 

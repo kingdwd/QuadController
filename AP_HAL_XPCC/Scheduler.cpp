@@ -85,7 +85,6 @@ void Scheduler::register_delay_callback(AP_HAL::Proc k,
 
 void Scheduler::register_timer_process(AP_HAL::MemberProc proc)
 {
-    XPCC_LOG_DEBUG .printf("Register timer proc %x\n", &proc);
 	for (int i = 0; i < _num_timer_procs; i++) {
         if (_timer_proc[i] == proc) {
             return;
@@ -99,6 +98,8 @@ void Scheduler::register_timer_process(AP_HAL::MemberProc proc)
         _timer_proc[_num_timer_procs] = proc;
         /* _num_timer_procs is used from interrupt, and multiple bytes long. */
         _num_timer_procs++;
+    } else {
+    	panic("Failed to register timer proc\n");
     }
 }
 

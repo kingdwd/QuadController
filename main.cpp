@@ -96,7 +96,7 @@ XpccHAL::UARTDriver uartBDriver(&uartGps);
 XpccHAL::UARTDriver uartCDriver(&radio);
 XpccHAL::UARTDriver uartDDriver(0);
 XpccHAL::UARTDriver uartEDriver(0);
-XpccHAL::UARTDriver uartConsoleDriver(&uart0/*&usb.serial2*/);
+XpccHAL::UARTDriver uartConsoleDriver(/*&uart0*/&usb.serial2);
 
 void XpccHAL::UARTDriver::setBaud(uint32_t baud, xpcc::IODevice* device) {
 	if(device == &uartGps) {
@@ -277,10 +277,11 @@ int main() {
 	wd_init();
 
 	NVIC_SetPriority(USB_IRQn, 4);
-	NVIC_SetPriority(DMA_IRQn, 0);
-	NVIC_SetPriority(I2C2_IRQn, 2);
-	NVIC_SetPriority(EINT3_IRQn, 0);
+	NVIC_SetPriority(DMA_IRQn, 1);
+	NVIC_SetPriority(I2C2_IRQn, 3);
+	NVIC_SetPriority(EINT3_IRQn, 2);
 	NVIC_SetPriority(UART0_IRQn, 5);
+	NVIC_SetPriority(ADC_IRQn, 10);
 
 	//debugIrq = true;
 	ledRed::setOutput(true);
@@ -288,10 +289,7 @@ int main() {
 	ledBlue::setOutput(0);
 
 	lpc17::RitClock::initialize();
-
 	lpc17::SysTickTimer::enable();
-
-
 
 /////
 	SpiMaster1::initialize(SpiMaster1::Mode::MODE_0, 1000000);
@@ -320,9 +318,6 @@ int main() {
 	Pinsel::setFunc(0, 10, 2); //I2C2
 	Pinsel::setFunc(0, 11, 2); //I2C2
 /////
-
-	lpc17::ADC::init(10000);
-	lpc17::ADC::burstMode(true);
 
 	//set uart3(gps) pins
 	Pinsel::setFunc(0, 0, 2);

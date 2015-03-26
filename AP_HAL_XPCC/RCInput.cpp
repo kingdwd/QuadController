@@ -34,16 +34,16 @@ uint8_t RCInput::num_channels() {
 
 uint16_t RCInput::read(uint8_t ch) {
 
-	//if radio link is lost for 800ms center axes
-	if(xpcc::Clock::now() - radio.rcPacketTimestamp > 800) {
+//	//if radio link is lost for 800ms center axes
+	if(xpcc::Clock::now() - radio.rcPacketTimestamp > 500) {
 		radio.rcData.channels[RC_ROLL] = 1500;
 		radio.rcData.channels[RC_PITCH] = 1500;
 		radio.rcData.channels[RC_YAW] = 1500;
 	}
-	//	//if radio link is lost for 2s, trigger throttle failsafe
-	if(xpcc::Clock::now() - radio.rcPacketTimestamp > 2000) {
-		radio.rcData.channels[RC_THROTTLE] = 800;
-	}
+//	//	//if radio link is lost for 2s, trigger throttle failsafe
+//	if(xpcc::Clock::now() - radio.rcPacketTimestamp > 2000) {
+//		radio.rcData.channels[RC_THROTTLE] = 800;
+//	}
 
 	last_read = radio.rcPacketTimestamp;
 

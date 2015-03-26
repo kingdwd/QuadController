@@ -230,3 +230,7 @@ void Radio::handleRxComplete() {
 void Radio::handleTxComplete() {
 	setModeRx();
 }
+
+void Radio::handleReset() {
+
+}

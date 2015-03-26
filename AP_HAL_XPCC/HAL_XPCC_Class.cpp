@@ -48,10 +48,14 @@ void HAL_XPCC::init(int argc,char* const argv[]) const {
     /* initialize all drivers and private members here.
      * up to the programmer to do this in the correct order.
      * Scheduler should likely come first. */
+	analogin->init(0);
+
     scheduler->init(0);
+
     storage->init(0);
     rcout->init(0);
 
+    i2c->begin();
 
 }
 

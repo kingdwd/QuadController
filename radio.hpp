@@ -114,8 +114,9 @@ public:
 
     static const struct AP_Param::GroupInfo var_info[];
 protected:
-	void handleTxComplete();
-	void handleRxComplete();
+	void handleTxComplete() override;
+	void handleRxComplete() override;
+	void handleReset() override;
 	bool sendAck(Packet* inPkt);
 
 	AP_Int32 freq;

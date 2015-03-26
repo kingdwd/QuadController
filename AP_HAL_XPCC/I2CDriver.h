@@ -44,8 +44,10 @@ public:
 private:
     AP_HAL::Semaphore* _semaphore;
     AP_HAL::MemberProc nb_callback;
-    volatile bool nb_transaction;
+    volatile uint32_t nb_transaction;
     uint8_t error_count;
+
+    void watchdog();
 
     void stopped(DetachCause cause) override;
 };
